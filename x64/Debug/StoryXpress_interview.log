@@ -1,0 +1,16 @@
+﻿Build started 13-08-2015 02:08:58.
+     1>Project "G:\Projects\StoryXpress_interview\StoryXpress_interview\StoryXpress_interview.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IG:\Libraries\glm\glm /I"G:\Libraries\SDL2-2.0.3\include" /I"G:\Libraries\glew-1.12.0\include" /Zi /nologo /W3 /WX- /Od /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt StoryXpress_interview.cpp
+         StoryXpress_interview.cpp
+     1>StoryXpress_interview.cpp(289): warning C4244: 'initializing' : conversion from 'Uint32' to 'GLfloat', possible loss of data
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"G:\Projects\StoryXpress_interview\x64\Debug\StoryXpress_interview.exe" /INCREMENTAL /NOLOGO /LIBPATH:"G:\Libraries\SDL2-2.0.3\lib\x64" /LIBPATH:"G:\Libraries\glew-1.12.0\lib\Release\x64" opengl32.lib SDL2main.lib SDL2.lib glew32.lib glew32s.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"G:\Projects\StoryXpress_interview\x64\Debug\StoryXpress_interview.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"G:\Projects\StoryXpress_interview\x64\Debug\StoryXpress_interview.lib" /MACHINE:X64 x64\Debug\camera.obj
+         x64\Debug\Mesh.obj
+         x64\Debug\StoryXpress_interview.obj
+         StoryXpress_interview.vcxproj -> G:\Projects\StoryXpress_interview\x64\Debug\StoryXpress_interview.exe
+     1>Done Building Project "G:\Projects\StoryXpress_interview\StoryXpress_interview\StoryXpress_interview.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:04.37
