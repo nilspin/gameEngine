@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
 
 #pragma endregion SHADER_FUNCTIONS
 
+#pragma region MESH
 	//Create Vertex Array Object
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -81,14 +82,14 @@ int main(int argc, char *argv[])
 
 	GLfloat colors[] =
 	{
-		0.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 1.0f, 0.0f,
 		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, 1.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 0.0f,
 	};
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(colors), NULL, GL_STATIC_DRAW);
@@ -126,12 +127,12 @@ int main(int argc, char *argv[])
 	glBindVertexArray(Wall);
 
 	GLfloat canvas[] = {		//DATA
-		-1.0f,-1.0f, -3.0f,
-		-1.0f, 1.0f, -3.0f,
-		1.0f, -1.0f, -3.0f,
-		1.0f, -1.0f, -3.0f,
-		1.0f, 1.0f, -3.0f,
-		-1.0f, 1.0f, -3.0f
+		-10.0f,-3.0f, -10.0f,
+		-10.0f, -3.0f, 10.0f,
+		10.0f, -3.0f, -10.0f,
+		10.0f, -3.0f, -10.0f,
+		10.0f, -3.0f, 10.0f,
+		-10.0f, -3.0f, 10.0f
 	};	//Don't need index data for this peasant mesh!
 
 	GLuint WallVBO;//VBO for fluid wall
@@ -144,9 +145,9 @@ int main(int argc, char *argv[])
 
 	GLfloat WallColor[] =
 	{
-		1.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
 		1.0f, 1.0f, 1.0f,
 		1.0f, 1.0f, 1.0f,
 		1.0f, 1.0f, 1.0f
@@ -160,6 +161,7 @@ int main(int argc, char *argv[])
 	glEnableVertexAttribArray(shaderProgram->attribute("color"));
 	glBindVertexArray(0);	//unbind VAO
 
+#pragma endregion MESH
 
 	/*Framebuffer shit
 	GLuint FBO;
@@ -186,10 +188,10 @@ int main(int argc, char *argv[])
 	glm::mat4 model; //define a transformation matrix for model in local coords
 
 	glm::mat4 view = glm::lookAt(
-		glm::vec3(4.2f, 4.2f, 4.2f),
+		glm::vec3(0.0f, 3.0f, 10.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-		);	//view matrix
+		glm::vec3(0.0f, 1.0f, 0.0f)
+		);	//view matrix(pos, target, up)
 
 	glm::mat4 proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
 
@@ -289,7 +291,7 @@ int main(int argc, char *argv[])
 		GLfloat time = SDL_GetTicks();
 		glUniform1f(uniColor, 1.0f);// (sin(time*0.01f) + 1.0f) / 2.0f);
 
-		model = glm::rotate(glm::mat4(1), time*0.005f, glm::vec3(0, 0, 1));	//calculate on the fly
+		model = glm::rotate(glm::mat4(1), time*0.005f, glm::vec3(0, 1, 0));	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
 
