@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 
 	shaderProgram->addAttribute("position");
 	shaderProgram->addAttribute("color");
+	shaderProgram->addAttribute("normal");
 
 	shaderProgram->addUniform("MVP");
 
@@ -81,9 +82,18 @@ int main(int argc, char *argv[])
 //	vector<glm::vec3> temp(verts.size(), glm::vec3(1, 0, 0));
 	glBufferData(GL_ARRAY_BUFFER, normals.size()*sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
+	glVertexAttribPointer(shaderProgram->attribute("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(shaderProgram->attribute("normal"));
+
+	GLuint suzanneColorVBO;
+	glGenBuffers(1, &suzanneColorVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, suzanneColorVBO);
+	vector<glm::vec3> temp(verts.size(), glm::vec3(1, 0, 0));	//red color
+	glBufferData(GL_ARRAY_BUFFER, temp.size()*sizeof(glm::vec3), &temp[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
+	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(shaderProgram->attribute("color"));
-
+	/*TEMP stuff*/
 	glBindVertexArray(0);
 #pragma endregion MODEL
 
