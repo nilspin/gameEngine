@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "ShaderProgram.hpp"
 #include "Mesh.h"
+#include "objloader.hpp"
 
 using namespace std;
 
@@ -14,11 +15,12 @@ GLuint positionAttribute, colAttrib, uniColor;
 void initGL()
 {
 	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
-
 }
 
 int main(int argc, char *argv[])
 {
+
+#pragma region SDL_INIT
 	/* Don't use camera for now*/
 	Camera cam;
 	cam.SetMode(FREE);
@@ -40,6 +42,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+#pragma endregion SDL_INIT
+
 #pragma region SHADER_FUNCTIONS
 
 	//=============================================================================================
@@ -56,6 +60,37 @@ int main(int argc, char *argv[])
 
 
 #pragma endregion SHADER_FUNCTIONS
+
+#pragma region MODEL
+
+	vector<glm::vec3> verts;
+	vector<glm::vec2> uvs;
+	vector<glm::vec3> normals;
+	bool res = loadOBJ("suzanne.obj", verts, uvs, normals);
+
+	GLuint suzanne;
+	glGenVertexArrays(1, &suzanne);
+	glBindVertexArray(suzanne);
+
+	GLuint suzanneVertVBO;//VBO for suzanne verts
+	glGenBuffers(1, &suzanneVertVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, suzanneVertVBO);
+	glBufferData(GL_ARRAY_BUFFER, verts.size()*sizeof(glm::vec3), &verts[0], GL_STATIC_DRAW);
+	//Assign attribs
+	glVertexAttribPointer(shaderProgram->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(shaderProgram->attribute("position"));
+
+	//vertex color(we don't have separate color so just take normals for now)
+	GLuint suzanneNormalVBO;//VBO for suzanne verts
+	glGenBuffers(1, &suzanneNormalVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, suzanneNormalVBO);
+	glBufferData(GL_ARRAY_BUFFER, normals.size()*sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
+	//Assign attribs
+	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(shaderProgram->attribute("color"));
+
+	glBindVertexArray(0);
+#pragma endregion MODEL
 
 #pragma region MESH
 	//Create Vertex Array Object
@@ -163,6 +198,9 @@ int main(int argc, char *argv[])
 
 #pragma endregion MESH
 
+
+#pragma region FBO_SHIT
+
 	/*Framebuffer shit
 	GLuint FBO;
 	glGenFramebuffers(1,&FBO);
@@ -184,6 +222,7 @@ int main(int argc, char *argv[])
 	//	vector<glm::vec3> suzanne_normals;
 	//	vector<char16_t> suzanne_elements;
 
+#pragma endregion FBO_SHIT
 
 	glm::mat4 model; //define a transformation matrix for model in local coords
 
@@ -278,7 +317,7 @@ int main(int argc, char *argv[])
 
 		//draw wall
 		glBindVertexArray(Wall);
-		model = glm::mat4(1);
+		model = glm::mat4(1);	//identity matrix, i.e no transform
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
 
@@ -286,7 +325,7 @@ int main(int argc, char *argv[])
 		glBindVertexArray(0);
 
 		//draw cube
-		glBindVertexArray(VAO);
+		glBindVertexArray(suzanne);
 		//following 2 lines define "intensity" of color, i.e ranging from 0 to highest
 		GLfloat time = SDL_GetTicks();
 		glUniform1f(uniColor, 1.0f);// (sin(time*0.01f) + 1.0f) / 2.0f);
@@ -296,7 +335,8 @@ int main(int argc, char *argv[])
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
 
 		//		suzanne->draw();
-		glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+//		glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, verts.size());
 		glBindVertexArray(0);
 		SDL_GL_SwapWindow(window);
 		//		if (1000 / FPS > SDL_GetTicks() - start)
