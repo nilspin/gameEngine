@@ -21,14 +21,7 @@ int main(int argc, char *argv[])
 {
 
 #pragma region SDL_INIT
-	/* Don't use camera for now*/
-	Camera cam;
-	cam.SetMode(FREE);
-	cam.SetPosition(glm::vec3(0, 0, -10));
-	cam.SetLookAt(glm::vec3(0, 0, 0));
-	cam.SetClipping(.01, 50);
-	cam.SetFOV(45);
-
+	
 	Uint32 start = NULL;
 	SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -84,6 +77,8 @@ int main(int argc, char *argv[])
 	GLuint suzanneNormalVBO;//VBO for suzanne verts
 	glGenBuffers(1, &suzanneNormalVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneNormalVBO);
+	/*TEMP stuff*/
+//	vector<glm::vec3> temp(verts.size(), glm::vec3(1, 0, 0));
 	glBufferData(GL_ARRAY_BUFFER, normals.size()*sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -264,32 +259,26 @@ int main(int argc, char *argv[])
 					break;
 
 				case SDLK_w:
-					cam.Move(FORWARD);
 					std::cout << "W pressed \n";
 					break;
 
 				case SDLK_s:
-					cam.Move(BACK);
 					std::cout << "S pressed \n";
 					break;
 
 				case SDLK_a:
-					cam.Move(LEFT);
 					std::cout << "A pressed \n";
 					break;
 
 				case SDLK_d:
-					cam.Move(RIGHT);
 					std::cout << "D pressed \n";
 					break;
 
 				case SDLK_q:
-					cam.Move(DOWN);
 					std::cout << "Q pressed \n";
 					break;
 
 				case SDLK_e:
-					cam.Move(UP);
 					std::cout << "E pressed \n";
 					break;
 
@@ -298,17 +287,15 @@ int main(int argc, char *argv[])
 
 			case SDL_MOUSEMOTION:
 
-				cam.Move2D(e.motion.x, e.motion.y);
 				std::cout << "mouse moved by x=" << e.motion.x << " y=" << e.motion.y << "\n";
 				break;
 
-			case SDL_MOUSEBUTTONDOWN:
-				cam.SetPos(e.button.button, e.button.state, e.button.x, e.button.y);
+/*			case SDL_MOUSEBUTTONDOWN:
 				break;
 
 			case SDL_MOUSEBUTTONUP:
-				cam.SetPos(e.button.button, e.button.state, e.button.x, e.button.y);
 				break;
+*/
 			}
 		}
 #pragma endregion EVENT_HANDLING
