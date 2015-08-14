@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
 	//=============================================================================================
 
-	ShaderProgram *shaderProgram = new ShaderProgram();
+	unique_ptr<ShaderProgram> shaderProgram(new ShaderProgram());
 	shaderProgram->initFromFiles("MainShader.vert", "MainShader.frag");
 
 	shaderProgram->addAttribute("position");
@@ -52,9 +52,12 @@ int main(int argc, char *argv[])
 	shaderProgram->addUniform("V");
 	shaderProgram->addUniform("M");
 	shaderProgram->addUniform("LightPosition");
-
 	shaderProgram->use();
 
+	unique_ptr<ShaderProgram> passthrough(new ShaderProgram());
+	passthrough->initFromFiles("passthrough.vert", "passthrough.frag");
+	passthrough->addAttribute("position");
+	passthrough->addUniform("sampler");
 
 #pragma endregion SHADER_FUNCTIONS
 
@@ -169,7 +172,7 @@ int main(int argc, char *argv[])
 	glGenVertexArrays(1, &Wall);
 	glBindVertexArray(Wall);
 
-	GLfloat canvas[] = {		//DATA
+	GLfloat Wall_vert[] = {		//DATA
 		-10.0f,-3.0f, -10.0f,
 		-10.0f, -3.0f, 10.0f,
 		10.0f, -3.0f, -10.0f,
@@ -181,7 +184,7 @@ int main(int argc, char *argv[])
 	GLuint WallVBO;//VBO for fluid wall
 	glGenBuffers(1, &WallVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, WallVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(canvas), &canvas, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Wall_vert), &Wall_vert, GL_STATIC_DRAW);
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(shaderProgram->attribute("position"));
@@ -219,6 +222,31 @@ int main(int argc, char *argv[])
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(shaderProgram->attribute("normal"));
+	glBindVertexArray(0);	//unbind VAO
+
+	//=========================Canvas for texture sampling====================
+	// The quad's FBO. Used only for visualizing the shadowmap.
+	static const GLfloat g_quad_vertex_buffer_data[] = {
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+	};
+
+	GLuint canvas;
+	//Create Vertex Array Object
+	glGenVertexArrays(1, &canvas);
+	glBindVertexArray(canvas);
+
+	GLuint quad_vertexbuffer;
+	glGenBuffers(1, &quad_vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
+	//Assign attribs
+	glVertexAttribPointer(passthrough->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(passthrough->attribute("position"));
 	glBindVertexArray(0);	//unbind VAO
 
 #pragma endregion MESH
