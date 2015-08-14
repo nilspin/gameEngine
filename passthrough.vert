@@ -1,9 +1,9 @@
 in vec3 position;
 
-out vec3 pos;
+out vec2 pos;
 
 void main()
 {
-	pos = 2*vec3(position) - vec3(1,1,1);
+	//pos = (position.xy + vec2(1,1))/2.0;
 	gl_Position = vec4(position,1);
 }

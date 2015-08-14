@@ -41,7 +41,7 @@ void main()
 	float cosAlpha = clamp(dot(R, toCamera), 0, 1);	
 	//how much of reflected vector reaches camera
 
-	vec3 tempSpecularColor =  (specularColor*LightColor*LightPower*pow(cosAlpha,5))/(d*d);
+	vec3 tempSpecularColor =  (specularColor*LightColor*LightPower*pow(cosAlpha,50))/(d*d);
 
 	outColor =    tempSpecularColor + tempDiffuseColor ;//+
 

@@ -59,6 +59,11 @@ int main(int argc, char *argv[])
 	passthrough->addAttribute("position");
 	passthrough->addUniform("sampler");
 
+	unique_ptr<ShaderProgram> depthWrite(new ShaderProgram());
+	depthWrite->initFromFiles("depthWrite.vert","depthWrite.frag");
+	depthWrite->addAttribute("position");
+	depthWrite->addUniform("depthMVP");	//calculated from light's PoV
+
 #pragma endregion SHADER_FUNCTIONS
 
 #pragma region MODEL
@@ -224,6 +229,9 @@ int main(int argc, char *argv[])
 	glEnableVertexAttribArray(shaderProgram->attribute("normal"));
 	glBindVertexArray(0);	//unbind VAO
 
+#pragma endregion MESH
+
+#pragma region CANVAS
 	//=========================Canvas for texture sampling====================
 	// The quad's FBO. Used only for visualizing the shadowmap.
 	static const GLfloat g_quad_vertex_buffer_data[] = {
@@ -245,11 +253,11 @@ int main(int argc, char *argv[])
 	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
 	//Assign attribs
-	glVertexAttribPointer(passthrough->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(passthrough->attribute("position"));
+	glVertexAttribPointer(passthrough->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glBindVertexArray(0);	//unbind VAO
 
-#pragma endregion MESH
+#pragma endregion CANVAS
 
 
 #pragma region FBO_SHIT
@@ -266,6 +274,9 @@ int main(int argc, char *argv[])
 	//filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
 
 	glDrawBuffer(GL_NONE); // No color buffer is drawn to.
@@ -274,13 +285,6 @@ int main(int argc, char *argv[])
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
 	glBindFramebuffer(GL_FRAMEBUFFER,0);
-
-	/*Object loading shit*/
-//	Mesh *suzanne = new Mesh("suzanne.obj");
-	//	suzanne->upload();
-	//	vector<glm::vec4> suzanne_verts;
-	//	vector<glm::vec3> suzanne_normals;
-	//	vector<char16_t> suzanne_elements;
 
 #pragma endregion FBO_SHIT
 
@@ -367,9 +371,37 @@ int main(int argc, char *argv[])
 		}
 #pragma endregion EVENT_HANDLING
 
+		//1st pass - write to depthTexture (from light's PoV)
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//draw wall
+		glm::mat4 depthProj = glm::ortho<float>(-10,10,-10,10,-10,20);	//ortho projection matrix
+		glm::mat4 depthView = glm::lookAt(LightPos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		glm::mat4 depthModel = glm::mat4(1);	//identity for now
+		glm::mat4 depthMVP = depthProj*depthView*depthModel;
+
+		depthWrite->use();
+		glUniformMatrix4fv(depthWrite->uniform("depthMVP"), 1, GL_FALSE, glm::value_ptr(depthMVP));
+
+		glBindVertexArray(suzanne);
+		glDrawArrays(GL_TRIANGLES, 0, verts.size());
+		glBindVertexArray(0);	//unbind suzanne
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		//2nd pass : sample from depthBuffer and test occlusion
+
+		//3rd pass : render everything on screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		passthrough->use();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		glUniform1i(passthrough->uniform("sampler"), 0);
+		glBindVertexArray(canvas);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+		
+/*		//draw wall
 		glBindVertexArray(Wall);
 		model = glm::mat4(1);	//identity matrix, i.e no transform
 		MVP = proj*view*model;
@@ -395,12 +427,12 @@ int main(int argc, char *argv[])
 
 		glDrawArrays(GL_TRIANGLES, 0, verts.size());
 		glBindVertexArray(0);
+*/
 		SDL_GL_SwapWindow(window);
 		//		if (1000 / FPS > SDL_GetTicks() - start)
 		//			SDL_Delay(1000 / FPS - (SDL_GetTicks() - start));
 	}
 
-	shaderProgram->disable();
 	SDL_GL_DeleteContext(context);
 	SDL_Quit();
 
