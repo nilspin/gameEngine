@@ -49,6 +49,9 @@ int main(int argc, char *argv[])
 	shaderProgram->addAttribute("normal");
 
 	shaderProgram->addUniform("MVP");
+	shaderProgram->addUniform("V");
+	shaderProgram->addUniform("M");
+	shaderProgram->addUniform("LightPosition");
 
 	shaderProgram->use();
 
@@ -88,7 +91,7 @@ int main(int argc, char *argv[])
 	GLuint suzanneColorVBO;
 	glGenBuffers(1, &suzanneColorVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneColorVBO);
-	vector<glm::vec3> temp(verts.size(), glm::vec3(1, 0, 0));	//red color
+	vector<glm::vec3> temp(verts.size(), glm::vec3(0.5, 0, 0));	//red color
 	glBufferData(GL_ARRAY_BUFFER, temp.size()*sizeof(glm::vec3), &temp[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -199,6 +202,23 @@ int main(int argc, char *argv[])
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(shaderProgram->attribute("color"));
+
+	//wall normal
+	GLfloat WallNormal[] = {		//DATA
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f
+	};
+	GLuint WallNormalVBO;//VBO for fluid wall
+	glGenBuffers(1, &WallNormalVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, WallNormalVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(WallNormal), &WallNormal, GL_STATIC_DRAW);
+	//Assign attribs
+	glVertexAttribPointer(shaderProgram->attribute("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(shaderProgram->attribute("normal"));
 	glBindVertexArray(0);	//unbind VAO
 
 #pragma endregion MESH
@@ -240,6 +260,8 @@ int main(int argc, char *argv[])
 	glm::mat4 proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
 
 	glm::mat4 MVP;
+	
+	glm::vec3 LightPos(2.5, 3, -5);
 
 	glEnable(GL_DEPTH_TEST); //wierd shit happens if you don't do this
 	glEnable(GL_BLEND);
@@ -317,7 +339,9 @@ int main(int argc, char *argv[])
 		model = glm::mat4(1);	//identity matrix, i.e no transform
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
-
+		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
+		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 
@@ -325,14 +349,15 @@ int main(int argc, char *argv[])
 		glBindVertexArray(suzanne);
 		//following 2 lines define "intensity" of color, i.e ranging from 0 to highest
 		GLfloat time = SDL_GetTicks();
-		glUniform1f(uniColor, 1.0f);// (sin(time*0.01f) + 1.0f) / 2.0f);
-
-		model = glm::rotate(glm::mat4(1), time*0.005f, glm::vec3(0, 1, 0));	//calculate on the fly
+		
+		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
+		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
 
-		//		suzanne->draw();
-//		glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+
 		glDrawArrays(GL_TRIANGLES, 0, verts.size());
 		glBindVertexArray(0);
 		SDL_GL_SwapWindow(window);
