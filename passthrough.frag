@@ -4,5 +4,7 @@ out vec4 outColor;
 
 void main()
 {
-	outColor = vec4(texture(sampler,pos).x,texture(sampler,pos).x,texture(sampler,pos).x,1);//vec4(0.4,0.9,1,1);
+	outColor = texture(sampler,pos);
+//	float temp = normalize(texture(sampler,pos).x);
+//	outColor = vec4(temp,temp,temp,1);
 }

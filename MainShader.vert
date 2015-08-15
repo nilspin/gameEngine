@@ -7,14 +7,19 @@ out vec3 pos;	//required in world space because of distance calculation
 out vec3 pos_camspace;
 out vec3 Normal_camspace;
 out vec3 LightPos_camspace;
+out vec3 pos_lightspace;
 
 uniform mat4 MVP;
 uniform mat4 M;
 uniform mat4 V;
+uniform mat4 depthMVP;
 uniform vec3 LightPosition;
 
 void main()
 {	
+	//position in light space
+	pos_lightspace = (depthMVP*vec4(position,1)).xyz;
+
 	//position in world space
 	pos = (M*vec4(position,1)).xyz;
 

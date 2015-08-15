@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
 	shaderProgram->addUniform("V");
 	shaderProgram->addUniform("M");
 	shaderProgram->addUniform("LightPosition");
+	shaderProgram->addUniform("depthMVP");
+	shaderProgram->addUniform("depthTexture");
 	shaderProgram->use();
 
 	unique_ptr<ShaderProgram> passthrough(new ShaderProgram());
@@ -389,7 +391,24 @@ int main(int argc, char *argv[])
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
 		//2nd pass : sample from depthBuffer and test occlusion
+/*		GLfloat time = SDL_GetTicks();
+		shaderProgram->use();
+		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly
+		MVP = proj*view*model;
+		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
+		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
+		glUniformMatrix4fv(shaderProgram->uniform("depthMVP"), 1, GL_FALSE, glm::value_ptr(depthMVP));
 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		glUniform1i(shaderProgram->uniform("depthTexture"), 0);
+		
+		glBindVertexArray(Wall);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+*/
 		//3rd pass : render everything on screen
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -400,7 +419,8 @@ int main(int argc, char *argv[])
 		glBindVertexArray(canvas);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-		
+
+
 /*		//draw wall
 		glBindVertexArray(Wall);
 		model = glm::mat4(1);	//identity matrix, i.e no transform
