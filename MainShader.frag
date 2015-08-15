@@ -16,7 +16,7 @@ uniform sampler2D depthTexture;
 void main()
 {
 
-	float LightPower = 100.0;
+	float LightPower = 300.0;
 	vec3 LightColor = vec3(0.5,0.5,0.5);
 	vec3 specularColor = vec3(0.6,0.4,0.2);
 	vec3 ambientColor = vec3(0,0.05,0.04);
@@ -26,6 +26,7 @@ void main()
 	{
 		visibility = 0.5;
 	}
+
 	float d = distance(LightPosition, pos);
 
 	vec3 n = normalize(Normal_camspace);
@@ -34,7 +35,7 @@ void main()
 	float cosTheta = clamp(dot(lightDir,n),0,1);
 	//This gives "how much the LightPos and normal affect the final color"
 	
-	vec3 tempDiffuseColor = vec3(0.1,0,0) + (visibility*Color*LightColor*LightPower*cosTheta)/(d*d);
+	vec3 tempDiffuseColor = (visibility*Color*LightColor*LightPower*cosTheta)/(d*d);
 	//Diffuse color
 
 	// NOW SPECULAR PART

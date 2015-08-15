@@ -12,13 +12,13 @@ out vec3 pos_lightspace;
 uniform mat4 MVP;
 uniform mat4 M;
 uniform mat4 V;
-uniform mat4 depthMVP;
+uniform mat4 depthBiasMVP;
 uniform vec3 LightPosition;
 
 void main()
 {	
 	//position in light space
-	pos_lightspace = (depthMVP*vec4(position,1)).xyz;
+	pos_lightspace = (depthBiasMVP*vec4(position,1)).xyz;
 
 	//position in world space
 	pos = (M*vec4(position,1)).xyz;

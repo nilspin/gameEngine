@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	shaderProgram->addUniform("V");
 	shaderProgram->addUniform("M");
 	shaderProgram->addUniform("LightPosition");
-	shaderProgram->addUniform("depthMVP");
+	shaderProgram->addUniform("depthBiasMVP");
 	shaderProgram->addUniform("depthTexture");
 	shaderProgram->use();
 
@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
 	glm::mat4 model; //define a transformation matrix for model in local coords
 
 	glm::mat4 view = glm::lookAt(
-		glm::vec3(0.0f, 3.0f, 10.0f),
+		glm::vec3(0.0f, 3.0f, -20.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 1.0f, 0.0f)
 		);	//view matrix(pos, target, up)
@@ -302,8 +302,8 @@ int main(int argc, char *argv[])
 
 	glm::mat4 MVP;
 	
-	glm::vec3 LightPos(2.5, 3, -5);
-
+	glm::vec3 LightPos(0, 4, 3);//(2.5, 3, -5);
+	
 	glEnable(GL_DEPTH_TEST); //wierd shit happens if you don't do this
 	glEnable(GL_BLEND);
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	//clear screen
@@ -377,9 +377,10 @@ int main(int argc, char *argv[])
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		GLfloat time = SDL_GetTicks();
 		glm::mat4 depthProj = glm::ortho<float>(-10,10,-10,10,-10,20);	//ortho projection matrix
 		glm::mat4 depthView = glm::lookAt(LightPos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-		glm::mat4 depthModel = glm::mat4(1);	//identity for now
+		glm::mat4 depthModel = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly glm::mat4(1);	//identity for now
 		glm::mat4 depthMVP = depthProj*depthView*depthModel;
 
 		depthWrite->use();
@@ -391,26 +392,42 @@ int main(int argc, char *argv[])
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
 		//2nd pass : sample from depthBuffer and test occlusion
-/*		GLfloat time = SDL_GetTicks();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glm::mat4 biasMatrix(
+			0.5, 0.0, 0.0, 0.0,
+			0.0, 0.5, 0.0, 0.0,
+			0.0, 0.0, 0.5, 0.0,
+			0.5, 0.5, 0.5, 1.0
+			);
+		glm::mat4 depthBiasMVP = biasMatrix*depthMVP;
 		shaderProgram->use();
-		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly
+		model = glm::translate(glm::mat4(1), glm::vec3(0, 0, -10));//glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
 		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
 		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
-		glUniformMatrix4fv(shaderProgram->uniform("depthMVP"), 1, GL_FALSE, glm::value_ptr(depthMVP));
+		glUniformMatrix4fv(shaderProgram->uniform("depthBiasMVP"), 1, GL_FALSE, glm::value_ptr(depthBiasMVP));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, depthTexture);
 		glUniform1i(shaderProgram->uniform("depthTexture"), 0);
 		
+		glBindVertexArray(suzanne);
+		glDrawArrays(GL_TRIANGLES, 0, verts.size());
+		glBindVertexArray(0);
+
+		model = glm::translate(glm::mat4(1),glm::vec3(0,0,-10));
+		MVP = proj*view*model;
+		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
 		glBindVertexArray(Wall);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-*/
+
 		//3rd pass : render everything on screen
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+/*		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		passthrough->use();
 		glActiveTexture(GL_TEXTURE0);
@@ -419,35 +436,8 @@ int main(int argc, char *argv[])
 		glBindVertexArray(canvas);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-
-
-/*		//draw wall
-		glBindVertexArray(Wall);
-		model = glm::mat4(1);	//identity matrix, i.e no transform
-		MVP = proj*view*model;
-		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
-		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
-		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
-
-		//draw cube
-		glBindVertexArray(suzanne);
-		//following 2 lines define "intensity" of color, i.e ranging from 0 to highest
-		GLfloat time = SDL_GetTicks();
-		
-		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly
-		MVP = proj*view*model;
-		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
-		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
-		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
-
-
-		glDrawArrays(GL_TRIANGLES, 0, verts.size());
-		glBindVertexArray(0);
 */
+
 		SDL_GL_SwapWindow(window);
 		//		if (1000 / FPS > SDL_GetTicks() - start)
 		//			SDL_Delay(1000 / FPS - (SDL_GetTicks() - start));
