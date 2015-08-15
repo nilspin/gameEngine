@@ -44,9 +44,8 @@ Temporary Items
 *.obj
 *.tlog
 *.log
-*.log
-*.log
-*.log
-*.log
 *.pdb
-x64/Debug/vc120.idb
+*.idb
+*.vcxproj
+*.idb
+x64/Debug/StoryXpress_interview.log
