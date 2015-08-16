@@ -22,18 +22,20 @@ void main()
 	vec3 ambientColor = vec3(0,0.05,0.04);
 	float visibility = 1.0;
 
-	if(pos_lightspace.z > texture(depthTexture,pos_lightspace.xy).z)
-	{
-		visibility = 0.5;
-	}
-
-	float d = distance(LightPosition, pos);
-
 	vec3 n = normalize(Normal_camspace);
 	vec3 lightDir = normalize(LightPos_camspace - pos_camspace);
 
 	float cosTheta = clamp(dot(lightDir,n),0,1);
 	//This gives "how much the LightPos and normal affect the final color"
+
+	float bias = 0.005*tan(acos(cosTheta));
+
+	if((pos_lightspace.z - bias) > texture(depthTexture,pos_lightspace.xy).z)
+	{
+		visibility = 0.5;
+	}
+
+	float d = distance(LightPosition, pos);
 	
 	vec3 tempDiffuseColor = (visibility*Color*LightColor*LightPower*cosTheta)/(d*d);
 	//Diffuse color
