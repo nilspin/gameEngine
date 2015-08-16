@@ -1,8 +1,8 @@
 #include "stdafx.h"
-#include "camera.h"
 #include "ShaderProgram.hpp"
 #include "Mesh.h"
 #include "objloader.hpp"
+#include "camera.h"
 
 using namespace std;
 
@@ -11,12 +11,105 @@ using namespace std;
 GLuint VAO;
 GLuint VBO;
 GLuint positionAttribute, colAttrib, uniColor;
+SDL_Event e;
+SDL_Window* window = NULL;
 
-void initGL()
-{
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+#pragma region CAMERA_CODE
+glm::mat4 ViewMatrix;
+glm::mat4 ProjectionMatrix;
+
+glm::mat4 getViewMatrix(){
+	return ViewMatrix;
+}
+glm::mat4 getProjectionMatrix(){
+	return ProjectionMatrix;
 }
 
+
+// Initial position : on +Z
+glm::vec3 position = glm::vec3(0, 0, -15);
+// Initial horizontal angle : toward -Z
+float horizontalAngle = 3.14f;
+// Initial vertical angle : none
+float verticalAngle = 0.0f;
+// Initial Field of View
+float initialFoV = 45.0f;
+
+float speed = 3.0f; // 3 units / second
+float mouseSpeed = 0.005f;
+
+double lastTime = SDL_GetTicks();
+
+void computeMatricesFromInputs(){
+
+	// glfwGetTime is called only once, the first time this function is called
+//	static double lastTime = SDL_GetTicks();
+
+	// Compute time difference between current and last frame
+	double currentTime = SDL_GetTicks();
+	float deltaTime = float(currentTime - lastTime);
+
+	// Get mouse position
+	int xpos = e.motion.x;
+	int ypos = e.motion.y;
+
+	// Reset mouse position for next frame
+	SDL_WarpMouseInWindow(window, 1024 / 2, 768 / 2);
+
+	// Compute new orientation
+	horizontalAngle += mouseSpeed * float(1024 / 2 - xpos);
+	verticalAngle += mouseSpeed * float(768 / 2 - ypos);
+
+	// Direction : Spherical coordinates to Cartesian coordinates conversion
+	glm::vec3 direction(
+		cos(verticalAngle) * sin(horizontalAngle),
+		sin(verticalAngle),
+		cos(verticalAngle) * cos(horizontalAngle)
+		);
+
+	// Right vector
+	glm::vec3 right = glm::vec3(
+		sin(horizontalAngle - 3.14f / 2.0f),
+		0,
+		cos(horizontalAngle - 3.14f / 2.0f)
+		);
+
+	// Up vector
+	glm::vec3 up = glm::cross(right, direction);
+
+	// Move forward
+	if (e.key.keysym.sym == SDLK_w && e.type == SDL_KEYDOWN){
+		position += direction * deltaTime * speed;
+	}
+	// Move backward
+	if (e.key.keysym.sym == SDLK_s && e.type == SDL_KEYDOWN){
+		position -= direction * deltaTime * speed;
+	}
+	// Strafe right
+	if (e.key.keysym.sym == SDLK_d && e.type == SDL_KEYDOWN){
+		position += right * deltaTime * speed;
+	}
+	// Strafe left
+	if (e.key.keysym.sym == SDLK_a && e.type == SDL_KEYDOWN){
+		position -= right * deltaTime * speed;
+	}
+
+	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
+
+	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 0.1f, 100.0f);
+	// Camera matrix
+	ViewMatrix = glm::lookAt(
+		position,           // Camera is here
+		position + direction, // and looks here : at the same position, plus "direction"
+		up                  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+
+	// For the next frame, the "last time" will be "now"
+	lastTime = currentTime;
+}
+
+#pragma endregion CAMERA_CODE
 int main(int argc, char *argv[])
 {
 
@@ -25,7 +118,7 @@ int main(int argc, char *argv[])
 	Uint32 start = NULL;
 	SDL_Init(SDL_INIT_EVERYTHING);
 
-	SDL_Window *window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 
 	GLenum err = glewInit();
@@ -309,7 +402,6 @@ int main(int argc, char *argv[])
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	//clear screen
 
 	//here comes event handling part
-	SDL_Event e;
 	bool quit = false;
 
 	while (!quit)
@@ -373,6 +465,8 @@ int main(int argc, char *argv[])
 		}
 #pragma endregion EVENT_HANDLING
 
+		//First things first
+		computeMatricesFromInputs();
 		//1st pass - write to depthTexture (from light's PoV)
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -392,6 +486,7 @@ int main(int argc, char *argv[])
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
 		//2nd pass : sample from depthBuffer and test occlusion
+		glViewport(0, 0, 1024, 768);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glm::mat4 biasMatrix(
 			0.5, 0.0, 0.0, 0.0,
@@ -401,6 +496,8 @@ int main(int argc, char *argv[])
 			);
 		glm::mat4 depthBiasMVP = biasMatrix*depthMVP;
 		shaderProgram->use();
+		//add view matrix code here
+		view = getViewMatrix();
 		model = glm::translate(glm::mat4(1), glm::vec3(0, 0, -10));//glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
@@ -426,9 +523,8 @@ int main(int argc, char *argv[])
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 
-		//3rd pass : render everything on screen
-/*		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//3rd pass : render everything on screen -- uncomment only for debug purposes
+/*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		passthrough->use();
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, depthTexture);
