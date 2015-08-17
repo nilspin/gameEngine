@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 #pragma region CAMERA_CODE
 
 	Camera cam;
-	cam.SetPosition(glm::vec3(0, 0, -35));
+	cam.SetPosition(glm::vec3(0, 0, 35));
 	int m = 4;
 #pragma endregion CAMERA_CODE
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 	GLuint suzanneColorVBO;
 	glGenBuffers(1, &suzanneColorVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneColorVBO);
-	vector<glm::vec3> temp(verts.size(), glm::vec3(0.2, 0, 0));	//red color
+	vector<glm::vec3> temp(verts.size(), glm::vec3(0.1, 0, 0));	//red color
 	glBufferData(GL_ARRAY_BUFFER, temp.size()*sizeof(glm::vec3), &temp[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -309,9 +309,10 @@ int main(int argc, char *argv[])
 
 	glm::mat4 MVP;
 	
-	glm::vec3 LightPos(0, 4, 3);//(2.5, 3, -5);
+	glm::vec3 LightPos(0, 4, -7);//(2.5, 3, -5);
+	glm::vec3 translation_offset(0, 0, -10);
 	
-	glEnable(GL_DEPTH_TEST); //wierd shit happens if you don't do this
+	glEnable(GL_DEPTH_TEST); //wierd behaviour happens if we don't do this
 	glEnable(GL_BLEND);
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	//clear screen
 
@@ -413,8 +414,8 @@ int main(int argc, char *argv[])
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		GLfloat time = SDL_GetTicks();
-		glm::mat4 depthProj = glm::ortho<float>(-10,10,-10,10,-10,20);	//ortho projection matrix
-		glm::mat4 depthView = glm::lookAt(LightPos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		glm::mat4 depthProj = glm::ortho<float>(-15,15,-15,15,-15,25);	//ortho projection matrix
+		glm::mat4 depthView = glm::lookAt(LightPos, glm::vec3(0,0,-10), glm::vec3(0, 1, 0));
 		glm::mat4 depthModel = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly glm::mat4(1);	//identity for now
 		glm::mat4 depthMVP = depthProj*depthView*depthModel;
 
@@ -426,7 +427,7 @@ int main(int argc, char *argv[])
 		glBindVertexArray(0);	//unbind suzanne
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
-		//2nd pass : sample from depthBuffer and test occlusion
+		//=========================2nd pass : sample from depthBuffer and test occlusion
 		glViewport(0, 0, 1024, 768);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glm::mat4 biasMatrix(
@@ -439,7 +440,7 @@ int main(int argc, char *argv[])
 		shaderProgram->use();
 		//add view matrix code here
 		view = cam.getViewMatrix();
-		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));/*glm::translate(glm::mat4(1), glm::vec3(0, 0, -10));*///	//calculate on the fly
+		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
 		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
@@ -455,7 +456,7 @@ int main(int argc, char *argv[])
 		glDrawArrays(GL_TRIANGLES, 0, verts.size());
 		glBindVertexArray(0);
 
-		model = glm::translate(glm::mat4(1),glm::vec3(0,0,-10));
+		model = glm::mat4(1);//glm::translate(glm::mat4(1),glm::vec3(0,0,-10));
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
 		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
