@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ShaderProgram.hpp"
-#include "Mesh.h"
 #include "objloader.hpp"
 #include "camera.h"
 
