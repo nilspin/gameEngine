@@ -39,11 +39,13 @@ private :
 	glm::vec3 right;
 	// Up
 	glm::vec3 up;
+	// LookAt
+//	glm::vec3 lookAt = glm::vec3(0, 0, -10);
 	// Time difference
 	float timeDifference = 0;
 	
-	float speed = 0.2f; // 3 units / second
-	float mouseSpeed = 0.02f;
+	float speed = 0.20f; // 3 units / second
+	float mouseSpeed = 0.01f;
 
 	int temp = 0;
 
