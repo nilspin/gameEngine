@@ -14,102 +14,7 @@ GLuint positionAttribute, colAttrib, uniColor;
 SDL_Event e;
 SDL_Window* window = NULL;
 
-#pragma region CAMERA_CODE
-glm::mat4 ViewMatrix;
-glm::mat4 ProjectionMatrix;
 
-glm::mat4 getViewMatrix(){
-	return ViewMatrix;
-}
-glm::mat4 getProjectionMatrix(){
-	return ProjectionMatrix;
-}
-
-
-// Initial position : on +Z
-glm::vec3 position = glm::vec3(0, 0, -15);
-// Initial horizontal angle : toward -Z
-float horizontalAngle = 3.14f;
-// Initial vertical angle : none
-float verticalAngle = 0.0f;
-// Initial Field of View
-float initialFoV = 45.0f;
-
-float speed = 3.0f; // 3 units / second
-float mouseSpeed = 0.005f;
-
-double lastTime = SDL_GetTicks();
-
-void computeMatricesFromInputs(){
-
-	// glfwGetTime is called only once, the first time this function is called
-//	static double lastTime = SDL_GetTicks();
-
-	// Compute time difference between current and last frame
-	double currentTime = SDL_GetTicks();
-	float deltaTime = float(currentTime - lastTime);
-
-	// Get mouse position
-	int xpos = e.motion.x;
-	int ypos = e.motion.y;
-
-	// Reset mouse position for next frame
-	SDL_WarpMouseInWindow(window, 1024 / 2, 768 / 2);
-
-	// Compute new orientation
-	horizontalAngle += mouseSpeed * float(1024 / 2 - xpos);
-	verticalAngle += mouseSpeed * float(768 / 2 - ypos);
-
-	// Direction : Spherical coordinates to Cartesian coordinates conversion
-	glm::vec3 direction(
-		cos(verticalAngle) * sin(horizontalAngle),
-		sin(verticalAngle),
-		cos(verticalAngle) * cos(horizontalAngle)
-		);
-
-	// Right vector
-	glm::vec3 right = glm::vec3(
-		sin(horizontalAngle - 3.14f / 2.0f),
-		0,
-		cos(horizontalAngle - 3.14f / 2.0f)
-		);
-
-	// Up vector
-	glm::vec3 up = glm::cross(right, direction);
-
-	// Move forward
-	if (e.key.keysym.sym == SDLK_w && e.type == SDL_KEYDOWN){
-		position += direction * deltaTime * speed;
-	}
-	// Move backward
-	if (e.key.keysym.sym == SDLK_s && e.type == SDL_KEYDOWN){
-		position -= direction * deltaTime * speed;
-	}
-	// Strafe right
-	if (e.key.keysym.sym == SDLK_d && e.type == SDL_KEYDOWN){
-		position += right * deltaTime * speed;
-	}
-	// Strafe left
-	if (e.key.keysym.sym == SDLK_a && e.type == SDL_KEYDOWN){
-		position -= right * deltaTime * speed;
-	}
-
-	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
-
-	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 0.1f, 100.0f);
-	// Camera matrix
-	ViewMatrix = glm::lookAt(
-		position,           // Camera is here
-		position + direction, // and looks here : at the same position, plus "direction"
-		up                  // Head is up (set to 0,-1,0 to look upside-down)
-		);
-
-	// For the next frame, the "last time" will be "now"
-	lastTime = currentTime;
-}
-
-#pragma endregion CAMERA_CODE
 int main(int argc, char *argv[])
 {
 
@@ -129,6 +34,13 @@ int main(int argc, char *argv[])
 	}
 
 #pragma endregion SDL_INIT
+
+#pragma region CAMERA_CODE
+
+	Camera cam;
+	cam.SetPosition(glm::vec3(0, 0, -35));
+	int m = 4;
+#pragma endregion CAMERA_CODE
 
 #pragma region SHADER_FUNCTIONS
 
@@ -194,7 +106,7 @@ int main(int argc, char *argv[])
 	GLuint suzanneColorVBO;
 	glGenBuffers(1, &suzanneColorVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneColorVBO);
-	vector<glm::vec3> temp(verts.size(), glm::vec3(0.5, 0, 0));	//red color
+	vector<glm::vec3> temp(verts.size(), glm::vec3(0.2, 0, 0));	//red color
 	glBufferData(GL_ARRAY_BUFFER, temp.size()*sizeof(glm::vec3), &temp[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -383,14 +295,16 @@ int main(int argc, char *argv[])
 
 #pragma endregion FBO_SHIT
 
-	glm::mat4 model; //define a transformation matrix for model in local coords
+#pragma region MATRIX_STUFF
 
-	glm::mat4 view = glm::lookAt(
+	glm::mat4 model = glm::mat4(1); //define a transformation matrix for model in local coords
+
+	glm::mat4 view = glm::mat4(1);/*glm::lookAt(
 		glm::vec3(0.0f, 3.0f, -20.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 1.0f, 0.0f)
 		);	//view matrix(pos, target, up)
-
+*/
 	glm::mat4 proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
 
 	glm::mat4 MVP;
@@ -400,6 +314,8 @@ int main(int argc, char *argv[])
 	glEnable(GL_DEPTH_TEST); //wierd shit happens if you don't do this
 	glEnable(GL_BLEND);
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	//clear screen
+
+#pragma endregion MATRIX_STUFF
 
 	//here comes event handling part
 	bool quit = false;
@@ -424,23 +340,47 @@ int main(int argc, char *argv[])
 					break;
 
 				case SDLK_w:
+					cam.move(FORWARD);
 					std::cout << "W pressed \n";
 					break;
 
 				case SDLK_s:
+					cam.move(BACK);
 					std::cout << "S pressed \n";
 					break;
 
 				case SDLK_a:
+					cam.move(LEFT);
 					std::cout << "A pressed \n";
 					break;
 
 				case SDLK_d:
+					cam.move(RIGHT);
 					std::cout << "D pressed \n";
 					break;
 
-				case SDLK_q:
-					std::cout << "Q pressed \n";
+				case SDLK_UP:
+					cam.move(UP);
+					std::cout << "PgUP pressed \n";
+					break;
+
+				case SDLK_DOWN:
+					cam.move(DOWN);
+					std::cout << "PgDn pressed \n";
+					break;
+
+				case SDLK_LEFT:
+					cam.move(ROT_LEFT);
+					break;
+
+				case SDLK_RIGHT:
+					cam.move(ROT_RIGHT);
+					break;
+
+
+				case SDLK_r:
+					cam.Reset();
+					std::cout << "R pressed \n";
 					break;
 
 				case SDLK_e:
@@ -451,8 +391,8 @@ int main(int argc, char *argv[])
 				break;
 
 			case SDL_MOUSEMOTION:
-
-				std::cout << "mouse moved by x=" << e.motion.x << " y=" << e.motion.y << "\n";
+				cam.rotate();
+				std::cout << "mouse moved by x=" << e.motion.xrel << " y=" << e.motion.yrel << "\n";
 				break;
 
 /*			case SDL_MOUSEBUTTONDOWN:
@@ -462,11 +402,12 @@ int main(int argc, char *argv[])
 				break;
 */
 			}
+
 		}
 #pragma endregion EVENT_HANDLING
 
 		//First things first
-		computeMatricesFromInputs();
+		cam.calcMatrices();//computeMatricesFromInputs();
 		//1st pass - write to depthTexture (from light's PoV)
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -497,8 +438,8 @@ int main(int argc, char *argv[])
 		glm::mat4 depthBiasMVP = biasMatrix*depthMVP;
 		shaderProgram->use();
 		//add view matrix code here
-		view = getViewMatrix();
-		model = glm::translate(glm::mat4(1), glm::vec3(0, 0, -10));//glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly
+		view = cam.getViewMatrix();
+		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));/*glm::translate(glm::mat4(1), glm::vec3(0, 0, -10));*///	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
 		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
