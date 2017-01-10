@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	vector<glm::vec3> verts;
 	vector<glm::vec2> uvs;
 	vector<glm::vec3> normals;
-	bool res = loadOBJ("suzanne.obj", verts, uvs, normals);
+	bool res = loadOBJ("assets/suzanne.obj", verts, uvs, normals);
 
 	GLuint suzanne;
 	glGenVertexArrays(1, &suzanne);
