@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	//=============================================================================================
 
 	unique_ptr<ShaderProgram> shaderProgram(new ShaderProgram());
-	shaderProgram->initFromFiles("MainShader.vert", "MainShader.frag");
+	shaderProgram->initFromFiles("shaders/MainShader.vert", "shaders/MainShader.frag");
 
 	shaderProgram->addAttribute("position");
 	shaderProgram->addAttribute("color");
@@ -61,12 +61,12 @@ int main(int argc, char *argv[])
 	shaderProgram->use();
 
 	unique_ptr<ShaderProgram> passthrough(new ShaderProgram());
-	passthrough->initFromFiles("passthrough.vert", "passthrough.frag");
+	passthrough->initFromFiles("shaders/passthrough.vert", "shaders/passthrough.frag");
 	passthrough->addAttribute("position");
 	passthrough->addUniform("sampler");
 
 	unique_ptr<ShaderProgram> depthWrite(new ShaderProgram());
-	depthWrite->initFromFiles("depthWrite.vert","depthWrite.frag");
+	depthWrite->initFromFiles("shaders/depthWrite.vert","shaders/depthWrite.frag");
 	depthWrite->addAttribute("position");
 	depthWrite->addUniform("depthMVP");	//calculated from light's PoV
 
