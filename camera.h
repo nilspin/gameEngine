@@ -6,9 +6,9 @@ OpenGL Camera Code
 #define CAMERA_H
 
 #include "stdafx.h"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <SDL.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <SDL2/SDL.h>
 
 extern SDL_Window* window;
 extern SDL_Event e;

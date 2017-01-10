@@ -441,9 +441,9 @@ int main(int argc, char *argv[])
 		view = cam.getViewMatrix();
 		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
 		MVP = proj*view*model;
-		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
-		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
+		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, false, glm::value_ptr(model));
+		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, false, glm::value_ptr(view));
 		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
 		glUniformMatrix4fv(shaderProgram->uniform("depthBiasMVP"), 1, GL_FALSE, glm::value_ptr(depthBiasMVP));
 
@@ -457,9 +457,9 @@ int main(int argc, char *argv[])
 
 		model = glm::mat4(1);//glm::translate(glm::mat4(1),glm::vec3(0,0,-10));
 		MVP = proj*view*model;
-		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, FALSE, glm::value_ptr(MVP));
-		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
+		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, false, glm::value_ptr(model));
+		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, false, glm::value_ptr(view));
 		glBindVertexArray(Wall);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
