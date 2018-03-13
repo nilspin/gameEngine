@@ -1,3 +1,5 @@
+#version 330
+
 in vec3 position;
 in vec3 color;//uniform vec3 color;//
 in vec3 normal;

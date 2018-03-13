@@ -1,3 +1,5 @@
+#version 330
+
 in vec3 position;
 
 // Values that stay constant for the whole mesh.

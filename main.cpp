@@ -21,6 +21,12 @@ int main(int argc, char *argv[])
 	
 	Uint32 start = NULL;
 	SDL_Init(SDL_INIT_EVERYTHING);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	
 
 	window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -69,6 +75,9 @@ int main(int argc, char *argv[])
 	depthWrite->initFromFiles("shaders/depthWrite.vert","shaders/depthWrite.frag");
 	depthWrite->addAttribute("position");
 	depthWrite->addUniform("depthMVP");	//calculated from light's PoV
+
+	
+
 
 #pragma endregion SHADER_FUNCTIONS
 
