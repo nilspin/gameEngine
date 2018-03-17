@@ -186,64 +186,6 @@ int main(int argc, char *argv[])
 	int size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
 	glBindVertexArray(0);
-
-	//==========================THE WALL========================================
-	GLuint Wall;
-	glGenVertexArrays(1, &Wall);
-	glBindVertexArray(Wall);
-
-	GLfloat Wall_vert[] = {		//DATA
-		-10.0f,-3.0f, -10.0f,
-		-10.0f, -3.0f, 10.0f,
-		10.0f, -3.0f, -10.0f,
-		10.0f, -3.0f, -10.0f,
-		10.0f, -3.0f, 10.0f,
-		-10.0f, -3.0f, 10.0f
-	};	//Don't need index data for this peasant mesh!
-
-	GLuint WallVBO;//VBO for fluid wall
-	glGenBuffers(1, &WallVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, WallVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Wall_vert), &Wall_vert, GL_STATIC_DRAW);
-	//Assign attribs
-	glVertexAttribPointer(shaderProgram->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(shaderProgram->attribute("position"));
-
-	GLfloat WallColor[] =
-	{
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f
-	};
-	GLuint WallColorVBO;//VBO for fluid wall
-	glGenBuffers(1, &WallColorVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, WallColorVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(WallColor), &WallColor, GL_STATIC_DRAW);
-	//Assign attribs
-	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(shaderProgram->attribute("color"));
-
-	//wall normal
-	GLfloat WallNormal[] = {		//DATA
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f
-	};
-	GLuint WallNormalVBO;//VBO for fluid wall
-	glGenBuffers(1, &WallNormalVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, WallNormalVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(WallNormal), &WallNormal, GL_STATIC_DRAW);
-	//Assign attribs
-	glVertexAttribPointer(shaderProgram->attribute("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(shaderProgram->attribute("normal"));
-	glBindVertexArray(0);	//unbind VAO
-
 #pragma endregion MESH
 
 #pragma region CANVAS
@@ -469,9 +411,7 @@ int main(int argc, char *argv[])
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
 		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, false, glm::value_ptr(model));
 		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, false, glm::value_ptr(view));
-		glBindVertexArray(Wall);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
+		
 
 		//3rd pass : render everything on screen -- uncomment only for debug purposes
 /*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
