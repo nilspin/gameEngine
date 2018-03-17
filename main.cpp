@@ -292,32 +292,26 @@ int main(int argc, char *argv[])
 
 				case SDLK_w:
 					cam.move(FORWARD);
-					std::cout << "W pressed \n";
 					break;
 
 				case SDLK_s:
 					cam.move(BACK);
-					std::cout << "S pressed \n";
 					break;
 
 				case SDLK_a:
 					cam.move(LEFT);
-					std::cout << "A pressed \n";
 					break;
 
 				case SDLK_d:
 					cam.move(RIGHT);
-					std::cout << "D pressed \n";
 					break;
 
 				case SDLK_UP:
 					cam.move(UP);
-					std::cout << "PgUP pressed \n";
 					break;
 
 				case SDLK_DOWN:
 					cam.move(DOWN);
-					std::cout << "PgDn pressed \n";
 					break;
 
 				case SDLK_LEFT:
@@ -331,27 +325,14 @@ int main(int argc, char *argv[])
 
 				case SDLK_r:
 					cam.Reset();
-					std::cout << "R pressed \n";
+					std::cout << "Camera reset \n";
 					break;
-
-				case SDLK_e:
-					std::cout << "E pressed \n";
-					break;
-
 				}
 				break;
 
 			case SDL_MOUSEMOTION:
 				cam.rotate();
-				std::cout << "mouse moved by x=" << e.motion.xrel << " y=" << e.motion.yrel << "\n";
 				break;
-
-/*			case SDL_MOUSEBUTTONDOWN:
-				break;
-
-			case SDL_MOUSEBUTTONUP:
-				break;
-*/
 			}
 
 		}

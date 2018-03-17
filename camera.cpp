@@ -38,22 +38,18 @@ void Camera::move(CameraDirection dir)
 	switch (dir)
 	{
 	case FORWARD:	// Move forward
-		cout << "w pressed-" << endl;
 		position += direction * timeDifference * speed;
 		break;
 
 	case BACK:		// Move backward
-		cout << "s pressed-" << endl;
 		position -= direction * timeDifference * speed;
 		break;
 
 	case RIGHT:		// Move right
-		cout << "d pressed-" << endl;
 		position += right * timeDifference * speed;
 		break;
 
 	case LEFT:		// Move left
-		cout << "a pressed-" << endl;
 		position -= right * timeDifference * speed;
 		break;
 
