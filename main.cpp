@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	//=============================================================================================
 
 	unique_ptr<ShaderProgram> shaderProgram(new ShaderProgram());
-	shaderProgram->initFromFiles("shaders/MainShader.vert", "shaders/MainShader.frag");
+	shaderProgram->initFromFiles("shaders/MainShader.vert", "shaders/MainShader.geom", "shaders/MainShader.frag");
 
 	shaderProgram->addAttribute("position");
 	shaderProgram->addAttribute("color");
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	GLuint suzanneColorVBO;
 	glGenBuffers(1, &suzanneColorVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneColorVBO);
-	vector<glm::vec3> temp(verts.size(), glm::vec3(0.1, 0, 0));	//red color
+	vector<glm::vec3> temp(verts.size(), glm::vec3(1, 0.5, 0));	//red color
 	glBufferData(GL_ARRAY_BUFFER, temp.size()*sizeof(glm::vec3), &temp[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -197,6 +197,10 @@ int main(int argc, char *argv[])
 				switch (e.key.keysym.sym)
 				{
 				case SDLK_ESCAPE:
+					quit = true;
+					break;
+
+				case SDLK_q:
 					quit = true;
 					break;
 
