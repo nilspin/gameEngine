@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 #pragma region CAMERA_CODE
 
 	Camera cam;
-	cam.SetPosition(glm::vec3(0, 0, 35));
+	cam.SetPosition(glm::vec3(0, 0, 5));
 	int m = 4;
 #pragma endregion CAMERA_CODE
 
@@ -56,27 +56,20 @@ int main(int argc, char *argv[])
 
 	shaderProgram->addAttribute("position");
 	shaderProgram->addAttribute("color");
-	shaderProgram->addAttribute("normal");
+	//shaderProgram->addAttribute("normal");
 
 	shaderProgram->addUniform("MVP");
-	shaderProgram->addUniform("V");
-	shaderProgram->addUniform("M");
-	shaderProgram->addUniform("LightPosition");
-	shaderProgram->addUniform("depthBiasMVP");
-	shaderProgram->addUniform("depthTexture");
+	//shaderProgram->addUniform("V");
+	//shaderProgram->addUniform("M");
+	//shaderProgram->addUniform("LightPosition");
+	//shaderProgram->addUniform("depthBiasMVP");
+	//shaderProgram->addUniform("depthTexture");
 	shaderProgram->use();
 
 	unique_ptr<ShaderProgram> passthrough(new ShaderProgram());
 	passthrough->initFromFiles("shaders/passthrough.vert", "shaders/passthrough.frag");
 	passthrough->addAttribute("position");
 	passthrough->addUniform("sampler");
-
-	unique_ptr<ShaderProgram> depthWrite(new ShaderProgram());
-	depthWrite->initFromFiles("shaders/depthWrite.vert","shaders/depthWrite.frag");
-	depthWrite->addAttribute("position");
-	depthWrite->addUniform("depthMVP");	//calculated from light's PoV
-
-	
 
 
 #pragma endregion SHADER_FUNCTIONS
@@ -104,12 +97,13 @@ int main(int argc, char *argv[])
 	GLuint suzanneNormalVBO;//VBO for suzanne verts
 	glGenBuffers(1, &suzanneNormalVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneNormalVBO);
-	/*TEMP stuff*/
-//	vector<glm::vec3> temp(verts.size(), glm::vec3(1, 0, 0));
+	
+	/* UPLOAD NORMAL DATA
 	glBufferData(GL_ARRAY_BUFFER, normals.size()*sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
 	glVertexAttribPointer(shaderProgram->attribute("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(shaderProgram->attribute("normal"));
+	*/
 
 	GLuint suzanneColorVBO;
 	glGenBuffers(1, &suzanneColorVBO);
@@ -123,70 +117,6 @@ int main(int argc, char *argv[])
 	glBindVertexArray(0);
 #pragma endregion MODEL
 
-#pragma region MESH
-	//Create Vertex Array Object
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	//create a vertex buffer object
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	//define vertices of our triangle
-	GLfloat vertices[] = {
-		// front
-		-1.0, -1.0, 1.0,
-		1.0, -1.0, 1.0,
-		1.0, 1.0, 1.0,
-		-1.0, 1.0, 1.0,
-		// back
-		-1.0, -1.0, -1.0,
-		1.0, -1.0, -1.0,
-		1.0, 1.0, -1.0,
-		-1.0, 1.0, -1.0
-	};
-
-	GLfloat colors[] =
-	{
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 0.0f,
-	};
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(colors), NULL, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 8 * 3 * sizeof(GLfloat), vertices);
-	glBufferSubData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(GLfloat), 8 * 4 * sizeof(GLfloat), colors);
-	//Note that we use GL_STATIC_DRAW because we want to send data to GPU only once thoughout the
-	//program
-
-	/*Now specify the layout of the Vertex data */
-
-	// The following line tells the CPU program that "vertexData" stuff goes into "posision"
-	//parameter of the vertex shader.
-	glVertexAttribPointer(shaderProgram->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(shaderProgram->attribute("position"));
-
-	glVertexAttribPointer(shaderProgram->attribute("color"), 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(8 * 3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(shaderProgram->attribute("color"));
-
-	GLushort indices[] = { 0, 1, 2, 2, 3, 0, 3, 2, 6, 6, 7, 3, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4, 4, 0, 3, 3, 7, 4, 1, 5, 6, 6, 2, 1 };
-	//define an index buffer
-	GLuint indexBufferID;
-	glGenBuffers(1, &indexBufferID);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
-	int size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-	glBindVertexArray(0);
-#pragma endregion MESH
 
 #pragma region CANVAS
 	//=========================Canvas for texture sampling====================
@@ -224,19 +154,20 @@ int main(int argc, char *argv[])
 	glGenFramebuffers(1,&FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	//now create a texture
-	GLuint depthTexture;
-	glGenTextures(1, &depthTexture);
-	glBindTexture(GL_TEXTURE_2D, depthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 768, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	GLuint renderTexture;
+	glGenTextures(1, &renderTexture);
+	glBindTexture(GL_TEXTURE_2D, renderTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1024, 768, 0, GL_RGBA, GL_FLOAT, 0);
 	//filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture, 0);
 
-	glDrawBuffer(GL_NONE); // No color buffer is drawn to.
+	GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1,drawBuffers);//this is finally where we tell the driver to draw to this paricular framebuffer
 
 	// Always check that our framebuffer is ok
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -339,66 +270,31 @@ int main(int argc, char *argv[])
 #pragma endregion EVENT_HANDLING
 
 		//First things first
-		cam.calcMatrices();//computeMatricesFromInputs();
-		//1st pass - write to depthTexture (from light's PoV)
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		GLfloat time = SDL_GetTicks();
-		glm::mat4 depthProj = glm::ortho<float>(-15,15,-15,15,-15,25);	//ortho projection matrix
-		glm::mat4 depthView = glm::lookAt(LightPos, glm::vec3(0,0,-10), glm::vec3(0, 1, 0));
-		glm::mat4 depthModel = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, 1, 0));	//calculate on the fly glm::mat4(1);	//identity for now
-		glm::mat4 depthMVP = depthProj*depthView*depthModel;
-
-		depthWrite->use();
-		glUniformMatrix4fv(depthWrite->uniform("depthMVP"), 1, GL_FALSE, glm::value_ptr(depthMVP));
-
-		glBindVertexArray(suzanne);
-		glDrawArrays(GL_TRIANGLES, 0, verts.size());
-		glBindVertexArray(0);	//unbind suzanne
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		cam.calcMatrices();
 		
-		//=========================2nd pass : sample from depthBuffer and test occlusion
 		glViewport(0, 0, 1024, 768);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glm::mat4 biasMatrix(
-			0.5, 0.0, 0.0, 0.0,
-			0.0, 0.5, 0.0, 0.0,
-			0.0, 0.0, 0.5, 0.0,
-			0.5, 0.5, 0.5, 1.0
-			);
-		glm::mat4 depthBiasMVP = biasMatrix*depthMVP;
+		
 		shaderProgram->use();
-		//add view matrix code here
+		
 		view = cam.getViewMatrix();
+		GLfloat time = SDL_GetTicks();
 		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
-		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, false, glm::value_ptr(model));
-		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, false, glm::value_ptr(view));
-		glUniform3f(shaderProgram->uniform("LightPosition"), LightPos.x, LightPos.y, LightPos.z);
-		glUniformMatrix4fv(shaderProgram->uniform("depthBiasMVP"), 1, GL_FALSE, glm::value_ptr(depthBiasMVP));
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, depthTexture);
-		glUniform1i(shaderProgram->uniform("depthTexture"), 0);
+		
 		
 		glBindVertexArray(suzanne);
 		glDrawArrays(GL_TRIANGLES, 0, verts.size());
 		glBindVertexArray(0);
-
-		model = glm::mat4(1);//glm::translate(glm::mat4(1),glm::vec3(0,0,-10));
-		MVP = proj*view*model;
-		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
-		glUniformMatrix4fv(shaderProgram->uniform("M"), 1, false, glm::value_ptr(model));
-		glUniformMatrix4fv(shaderProgram->uniform("V"), 1, false, glm::value_ptr(view));
+		
 		
 
 		//3rd pass : render everything on screen -- uncomment only for debug purposes
 /*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		passthrough->use();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		glBindTexture(GL_TEXTURE_2D, renderTexture);
 		glUniform1i(passthrough->uniform("sampler"), 0);
 		glBindVertexArray(canvas);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
