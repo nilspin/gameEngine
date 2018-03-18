@@ -56,14 +56,7 @@ int main(int argc, char *argv[])
 
 	shaderProgram->addAttribute("position");
 	shaderProgram->addAttribute("color");
-	//shaderProgram->addAttribute("normal");
-
 	shaderProgram->addUniform("MVP");
-	//shaderProgram->addUniform("V");
-	//shaderProgram->addUniform("M");
-	//shaderProgram->addUniform("LightPosition");
-	//shaderProgram->addUniform("depthBiasMVP");
-	//shaderProgram->addUniform("depthTexture");
 	shaderProgram->use();
 
 	unique_ptr<ShaderProgram> passthrough(new ShaderProgram());
@@ -176,22 +169,8 @@ int main(int argc, char *argv[])
 
 #pragma endregion FBO_SHIT
 
-#pragma region MATRIX_STUFF
-
-	glm::mat4 model = glm::mat4(1); //define a transformation matrix for model in local coords
-
-	glm::mat4 view = glm::mat4(1);/*glm::lookAt(
-		glm::vec3(0.0f, 3.0f, -20.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 1.0f, 0.0f)
-		);	//view matrix(pos, target, up)
-*/
-	glm::mat4 proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
-
-	glm::mat4 MVP;
-	
-	glm::vec3 LightPos(0, 4, -7);//(2.5, 3, -5);
-	glm::vec3 translation_offset(0, 0, -10);
+	glm::mat4 model, view, proj, MVP;
+	proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
 	
 	glEnable(GL_DEPTH_TEST); //wierd behaviour happens if we don't do this
 	glEnable(GL_BLEND);
