@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 
 	glm::mat4 model, view, proj, MVP;
 	proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
-	
+
 	glEnable(GL_DEPTH_TEST); //wierd behaviour happens if we don't do this
 	glEnable(GL_BLEND);
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	//clear screen
@@ -251,6 +251,7 @@ int main(int argc, char *argv[])
 		//First things first
 		cam.calcMatrices();
 		
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glViewport(0, 0, 1024, 768);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -267,10 +268,11 @@ int main(int argc, char *argv[])
 		glDrawArrays(GL_TRIANGLES, 0, verts.size());
 		glBindVertexArray(0);
 		
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
 
-		//3rd pass : render everything on screen -- uncomment only for debug purposes
-/*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//2nd pass : render everything on screen -- uncomment only for debug purposes
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		passthrough->use();
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, renderTexture);
@@ -278,7 +280,7 @@ int main(int argc, char *argv[])
 		glBindVertexArray(canvas);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-*/
+
 
 		SDL_GL_SwapWindow(window);
 		//		if (1000 / FPS > SDL_GetTicks() - start)
