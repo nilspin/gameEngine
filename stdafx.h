@@ -23,6 +23,9 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-
+#include "oglDebug.hpp"
 //const int FPS = 30;
 //#define GLSL(src) "#version 150 core\n" #src
+
+
+
