@@ -179,6 +179,7 @@ int main(int argc, char *argv[])
 
 	glm::mat4 model, view, proj, MVP;
 	proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
+	proj = glm::ortho( -2.0f, 2.0f, -2.0f, 2.0f, 0.0f, 10.0f );
 
 	glEnable(GL_DEPTH_TEST); //wierd behaviour happens if we don't do this
 	glEnable(GL_BLEND);
@@ -264,14 +265,18 @@ int main(int argc, char *argv[])
 		cam.calcMatrices();
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glViewport(0, 0, 1024, 768);
+		glViewport(0, 0, 800, 800);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		shaderProgram->use();
 		
-		view = cam.getViewMatrix();
+		glm::mat4 viewFront = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0,0,0), glm::vec3(0,1,0));
+		glm::mat4 viewRight = glm::lookAt(glm::vec3(-5,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0));
+		glm::mat4 viewTop = glm::lookAt(glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(0,0,-1));
+		view = viewFront;
+		//view = cam.getViewMatrix();
 		GLfloat time = SDL_GetTicks();
-		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
+		//model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
 		
@@ -281,7 +286,7 @@ int main(int argc, char *argv[])
 		glBindVertexArray(0);
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
+		glViewport(0,0,1024,768);
 
 		//2nd pass : render everything on screen -- uncomment only for debug purposes
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
