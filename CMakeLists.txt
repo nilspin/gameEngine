@@ -23,6 +23,7 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${SDL2_LIBRARIES} ${GLEW_LIBRARIES} ${Boost_L
 include_directories(INCLUDE_DIRS ${INCLUDE_DIRS} include)
 
 set( SOURCES
+    App.cpp
     main.cpp
     camera.cpp
     ShaderProgram.hpp
