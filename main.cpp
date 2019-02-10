@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 {
 
 #pragma region SDL_INIT
-	
+
 	Uint32 start = NULL;
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
@@ -26,9 +26,9 @@ int main(int argc, char *argv[])
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	
 
-	window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+	window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL );
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 
 	GLenum err = glewInit();
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	GLuint suzanneNormalVBO;//VBO for suzanne verts
 	glGenBuffers(1, &suzanneNormalVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneNormalVBO);
-	
+
 	/* UPLOAD NORMAL DATA
 	glBufferData(GL_ARRAY_BUFFER, normals.size()*sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 #pragma endregion FBO_SHIT
 
 	glm::mat4 model, view, proj, MVP;
-	proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
+	//proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
 	proj = glm::ortho( -2.0f, 2.0f, -2.0f, 2.0f, 0.0f, 10.0f );
 
 	glEnable(GL_DEPTH_TEST); //wierd behaviour happens if we don't do this
@@ -263,13 +263,14 @@ int main(int argc, char *argv[])
 
 		//First things first
 		cam.calcMatrices();
-		
+
+    //1st pass : Render orthographic projection to FBO
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glViewport(0, 0, 800, 800);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
 		shaderProgram->use();
-		
+
 		glm::mat4 viewFront = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0,0,0), glm::vec3(0,1,0));
 		glm::mat4 viewRight = glm::lookAt(glm::vec3(-5,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0));
 		glm::mat4 viewTop = glm::lookAt(glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(0,0,-1));
@@ -279,12 +280,12 @@ int main(int argc, char *argv[])
 		//model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
 		MVP = proj*view*model;
 		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
-		
-		
+
+
 		glBindVertexArray(suzanne);
 		glDrawArrays(GL_TRIANGLES, 0, verts.size());
 		glBindVertexArray(0);
-		
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0,0,1024,768);
 

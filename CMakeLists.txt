@@ -1,15 +1,7 @@
 PROJECT(gameEngine)
-         
+
 cmake_minimum_required(VERSION 2.8)
 
-# Useful CMake options for Qt projects
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_CXX_FLAGS "-std=c++0x")
-#cmake_policy(SET CMP0004 OLD)
-
-
-# Search desired Qt packages
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
@@ -29,9 +21,9 @@ set( SOURCES
     objloader.cpp
 )
 
-add_executable( ${PROJECT_NAME} ${SOURCES})
+add_executable( ${PROJECT_NAME} ${SOURCES} )
 
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+target_link_libraries(${PROJECT_NAME} ${LIBS} SDL2)
 
 #Now copy shaders to build directory
 add_custom_target(copy-runtime-files ALL
