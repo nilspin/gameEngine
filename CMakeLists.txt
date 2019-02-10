@@ -1,5 +1,5 @@
 PROJECT(gameEngine)
-         
+
 cmake_minimum_required(VERSION 2.8)
 
 # Useful CMake options for Qt projects
@@ -31,7 +31,7 @@ set( SOURCES
 
 add_executable( ${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+target_link_libraries(${PROJECT_NAME} ${LIBS} SDL2)
 
 #Now copy shaders to build directory
 add_custom_target(copy-runtime-files ALL

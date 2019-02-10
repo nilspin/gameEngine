@@ -12,45 +12,22 @@ GLuint VBO;
 GLuint positionAttribute, colAttrib, uniColor;
 SDL_Event e;
 SDL_Window* window = NULL;
+static SDL_GLContext context;
+static Camera cam;
+static bool quit = true;
 
+void handleEvents(Camera&);
+int setupGL();
 
 int main(int argc, char *argv[])
 {
 
 #pragma region SDL_INIT
-	
-	Uint32 start = NULL;
-	SDL_Init(SDL_INIT_EVERYTHING);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	
-
-	window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-	SDL_GLContext context = SDL_GL_CreateContext(window);
-
-	GLenum err = glewInit();
-	if (GLEW_OK != err)
-	{
-		cout << "Sorry, but GLEW failed to load.";
-		return 1;
-	}
-
-#ifdef DEBUG
-  glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback(MessageCallback, nullptr);
-  glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-  glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
-                     GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Start debugging");
-#endif
-
+  setupGL();
 #pragma endregion SDL_INIT
 
 #pragma region CAMERA_CODE
 
-	Camera cam;
 	cam.SetPosition(glm::vec3(0, 0, 5));
 	int m = 4;
 #pragma endregion CAMERA_CODE
@@ -98,7 +75,7 @@ int main(int argc, char *argv[])
 	GLuint suzanneNormalVBO;//VBO for suzanne verts
 	glGenBuffers(1, &suzanneNormalVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, suzanneNormalVBO);
-	
+
 	/* UPLOAD NORMAL DATA
 	glBufferData(GL_ARRAY_BUFFER, normals.size()*sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);	//EDIT THIS LATER!!!
 	//Assign attribs
@@ -187,11 +164,61 @@ int main(int argc, char *argv[])
 #pragma endregion MATRIX_STUFF
 
 	//here comes event handling part
-	bool quit = false;
+	quit = false;
 
 	while (!quit)
 	{
 #pragma region EVENT_HANDLING
+    handleEvents(cam);
+#pragma endregion EVENT_HANDLING
+
+		//First things first
+		cam.calcMatrices();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glViewport(0, 0, 1024, 768);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shaderProgram->use();
+
+		view = cam.getViewMatrix();
+		GLfloat time = SDL_GetTicks();
+    model = glm::mat4(1);
+		//model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
+		MVP = proj*view*model;
+		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
+
+
+		glBindVertexArray(suzanne);
+		glDrawArrays(GL_TRIANGLES, 0, verts.size());
+		glBindVertexArray(0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		//2nd pass : render everything on screen -- uncomment only for debug purposes
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		passthrough->use();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, renderTexture);
+		glUniform1i(passthrough->uniform("sampler"), 0);
+		glBindVertexArray(canvas);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+
+
+		SDL_GL_SwapWindow(window);
+		//		if (1000 / FPS > SDL_GetTicks() - start)
+		//			SDL_Delay(1000 / FPS - (SDL_GetTicks() - start));
+	}
+
+	SDL_GL_DeleteContext(context);
+	SDL_Quit();
+
+	return 0;
+}
+
+void handleEvents(Camera& cam) {
 
 		while (SDL_PollEvent(&e) != 0)
 		{
@@ -258,49 +285,36 @@ int main(int argc, char *argv[])
 			}
 
 		}
-#pragma endregion EVENT_HANDLING
+}
 
-		//First things first
-		cam.calcMatrices();
-		
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glViewport(0, 0, 1024, 768);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		shaderProgram->use();
-		
-		view = cam.getViewMatrix();
-		GLfloat time = SDL_GetTicks();
-		model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
-		MVP = proj*view*model;
-		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
-		
-		
-		glBindVertexArray(suzanne);
-		glDrawArrays(GL_TRIANGLES, 0, verts.size());
-		glBindVertexArray(0);
-		
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
+int setupGL()  {
 
-		//2nd pass : render everything on screen -- uncomment only for debug purposes
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		passthrough->use();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, renderTexture);
-		glUniform1i(passthrough->uniform("sampler"), 0);
-		glBindVertexArray(canvas);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
+	Uint32 start = NULL;
+	SDL_Init(SDL_INIT_EVERYTHING);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 
-		SDL_GL_SwapWindow(window);
-		//		if (1000 / FPS > SDL_GetTicks() - start)
-		//			SDL_Delay(1000 / FPS - (SDL_GetTicks() - start));
+	window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	context = SDL_GL_CreateContext(window);
+
+	GLenum err = glewInit();
+	if (GLEW_OK != err)
+	{
+		cout << "Sorry, but GLEW failed to load.";
+		return 1;
 	}
 
-	SDL_GL_DeleteContext(context);
-	SDL_Quit();
+#ifdef DEBUG
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback(MessageCallback, nullptr);
+  glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+  glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
+                     GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Start debugging");
+#endif
 
-	return 0;
+
 }
