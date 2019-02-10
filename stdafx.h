@@ -26,6 +26,6 @@
 #include "oglDebug.hpp"
 //const int FPS = 30;
 //#define GLSL(src) "#version 150 core\n" #src
-
+extern SDL_Event event;
 
 

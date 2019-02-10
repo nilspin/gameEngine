@@ -77,7 +77,7 @@ int App::setupGL()  {
 }
 
 void App::setupAppParams()  {
-	cam.SetPosition(glm::vec3(0, 0, 5));
+	cam.setPosition(glm::vec3(0, 0, 5));
 	proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
 }
 int App::setupFBO(){
@@ -87,12 +87,12 @@ int App::setupFBO(){
 	//now create a texture
 	glGenTextures(1, &renderTexture);
 	glBindTexture(GL_TEXTURE_2D, renderTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1024, 768, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 300, 300) ;
 	//filtering
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture, 0);
 
@@ -111,7 +111,7 @@ void App::render()  {
 		cam.calcMatrices();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glViewport(0, 0, 1024, 768);
+		glViewport(0, 0, 300, 300);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shaderProgram->use();
@@ -222,16 +222,16 @@ void App::setupMesh() {
 
 void App::handleEvents() {
 
-		while (SDL_PollEvent(&e) != 0)
+		while (SDL_PollEvent(&event) != 0)
 		{
-			switch (e.type)
+			switch (event.type)
 			{
 			case SDL_QUIT:	//if X windowkey is pressed then quit
 				quit = true;
 
 			case SDL_KEYDOWN:	//if ESC is pressed then quit
 
-				switch (e.key.keysym.sym)
+				switch (event.key.keysym.sym)
 				{
 				case SDLK_ESCAPE:
 					quit = true;
@@ -275,7 +275,7 @@ void App::handleEvents() {
 
 
 				case SDLK_r:
-					cam.Reset();
+					cam.reset();
 					std::cout << "Camera reset \n";
 					break;
 				}

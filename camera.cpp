@@ -14,8 +14,8 @@ void Camera::rotate()
 	float deltaTime = float(currentTime - lastTime);
 	timeDifference = deltaTime;
 	// Get mouse position
-	int xpos = e.motion.xrel;
-	int ypos = e.motion.yrel;
+	int xpos = event.motion.xrel;
+	int ypos = event.motion.yrel;
 
 	// Compute new orientation
 	horizontalAngle += mouseSpeed * float(/*(1024 / 2) -*/ -xpos);
@@ -25,32 +25,25 @@ void Camera::rotate()
 	lastTime = currentTime;
 
 }
-void Camera::computeMatricesFromInputs(){
-
-	// glfwGetTime is called only once, the first time this function is called
-
-	// Compute time difference between current and last frame
-
-}
 
 void Camera::move(CameraDirection dir)
 {
 	switch (dir)
 	{
 	case FORWARD:	// Move forward
-		position += direction * timeDifference * speed;
+		position += direction * speed;
 		break;
 
 	case BACK:		// Move backward
-		position -= direction * timeDifference * speed;
+		position -= direction * speed;
 		break;
 
 	case RIGHT:		// Move right
-		position += right * timeDifference * speed;
+		position += right * speed;
 		break;
 
 	case LEFT:		// Move left
-		position -= right * timeDifference * speed;
+		position -= right * speed;
 		break;
 
 	case UP:		// Look up
@@ -75,11 +68,15 @@ void Camera::move(CameraDirection dir)
 
 }
 
-void Camera::SetPosition(glm::vec3 pos)
+void Camera::setPosition(glm::vec3 pos)
 {
 	position = InitialPos = pos;
 }
 
+void Camera::setProjectionMatrix(glm::mat4 proj)
+{
+	ProjectionMatrix = proj;
+}
 void Camera::calcMatrices()
 {
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
@@ -101,8 +98,6 @@ void Camera::calcMatrices()
 
 	float FoV = initialFoV;
 
-	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 0.1f, 100.0f);
 	// Camera matrix
 	ViewMatrix = glm::lookAt(
 		position,           // Camera is here
@@ -111,7 +106,7 @@ void Camera::calcMatrices()
 		);
 }
 
-void Camera::Reset()
+void Camera::reset()
 {
 	position = InitialPos;
 	horizontalAngle = 3.14f;
