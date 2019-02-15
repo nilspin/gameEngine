@@ -53,7 +53,7 @@ int App::setupGL()  {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 
@@ -132,7 +132,7 @@ void App::render()  {
 		GLfloat time = SDL_GetTicks();
     model = glm::mat4(1);
 		//model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
-    MVP = proj*view*model;
+    //glm::mat4 MVP = proj*view*model;
 
     //Disable some fixed-function opeartions
     glDisable( GL_CULL_FACE );
@@ -140,13 +140,13 @@ void App::render()  {
     glColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
 
 		shaderProgram->use();
-    mat4 MVPx = viewRight*view*model;
-    mat4 MVPy = viewTop*view*model;
-    mat4 MVPz = viewFront*view*model;
+    glm::mat4 MVPx = proj* viewRight*model;
+    glm::mat4 MVPy = proj* viewTop*model;
+    glm::mat4 MVPz = proj* viewFront*model;
     glUniformMatrix4fv(shaderProgram->uniform("MVPx"), 1, false, glm::value_ptr(MVPx));
     glUniformMatrix4fv(shaderProgram->uniform("MVPy"), 1, false, glm::value_ptr(MVPy));
     glUniformMatrix4fv(shaderProgram->uniform("MVPz"), 1, false, glm::value_ptr(MVPz));
-    glUniform3f(shaderProgram->uniform("gridDim", 1, glm::value_ptr(gridDim));
+    glUniform3i(shaderProgram->uniform("gridDim"),gridDim.x, gridDim.y, gridDim.z);
 
     //Bind atomic counter
     glBindBufferBase( GL_ATOMIC_COUNTER_BUFFER, 0, numVoxelsHandle );
@@ -162,7 +162,7 @@ void App::render()  {
     glBindBuffer( GL_ATOMIC_COUNTER_BUFFER, numVoxelsHandle );
     GLuint* count = (GLuint*)glMapBufferRange( GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), GL_MAP_READ_BIT | GL_MAP_WRITE_BIT );
     numVoxelFragments = count[0];
-    err = glGetError();
+    GLenum err = glGetError();
 
     glUnmapBuffer( GL_ATOMIC_COUNTER_BUFFER );
     glBindBuffer( GL_ATOMIC_COUNTER_BUFFER, 0 );
@@ -173,7 +173,7 @@ void App::render()  {
     glEnable( GL_CULL_FACE );
     glEnable( GL_DEPTH_TEST );
     glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
-    glViewport( 0, 0, g_width, g_height );
+    glViewport( 0, 0, 1024, 768 );
 
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -212,7 +212,7 @@ void App::setup3DTexture()  {
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 0);
   glTexParameteri(GL_TEXTURE_3D,  GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_3D,  GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage3D( GL_TEXTURE_3D, 0, GL_RGBA16F, voxelvoxelDim, voxelDim, voxelDim, 0, GL_RED, GL_UNSIGNED_BYTE, data );
+  glTexImage3D( GL_TEXTURE_3D, 0, GL_RGBA16F, voxelDim, voxelDim, voxelDim, 0, GL_RED, GL_UNSIGNED_BYTE, data );
   glBindTexture( GL_TEXTURE_3D, 0 );
   GLenum err = glGetError();
   cout<<glewGetErrorString(err)<<" "<<err<<endl;

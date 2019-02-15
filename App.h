@@ -25,7 +25,7 @@ class App {
     GLuint canvas;
     GLuint volumeTexture;
     const uint voxelDim = 56;
-    const glm::ivec3 gridDim(voxelDim);
+    const glm::ivec3 gridDim = glm::ivec3(voxelDim,voxelDim,voxelDim);
     GLuint VAO;
     GLuint VBO;
     GLuint FBO;
