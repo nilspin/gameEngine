@@ -8,7 +8,6 @@
 #define OGL_DEBUG_HPP
 
 #include<GL/glu.h>
-#include<GL/glu.h>
 #include<iostream>
 
 //Message callback

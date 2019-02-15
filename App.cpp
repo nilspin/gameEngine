@@ -1,4 +1,5 @@
 #include "App.h"
+//#include "glUtils.h"
 
 
 App::App()  {
@@ -30,7 +31,12 @@ void App::setupShaders()  {
 
 	shaderProgram->addAttribute("position");
 	shaderProgram->addAttribute("color");
-	shaderProgram->addUniform("MVP");
+	shaderProgram->addUniform("MVPx");
+	shaderProgram->addUniform("MVPy");
+	shaderProgram->addUniform("MVPz");
+	shaderProgram->addUniform("gridDim");
+	shaderProgram->addUniform("voxelFragCount");
+	shaderProgram->addUniform("volTexture");
 	shaderProgram->use();
 
   passthrough = unique_ptr<ShaderProgram>(new ShaderProgram());
@@ -78,8 +84,16 @@ int App::setupGL()  {
 
 void App::setupAppParams()  {
 	cam.setPosition(glm::vec3(0, 0, 5));
-	proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
+	//proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
+  proj = glm::ortho( -2.0f, 2.0f, -2.0f, 2.0f, 0.0f, 10.0f );
+
+  //Set up Atomic counter
+  glGenBuffers( 1, &numVoxelsHandle );
+  glBindBuffer( GL_ATOMIC_COUNTER_BUFFER, numVoxelsHandle );
+  glBufferStorage( GL_ATOMIC_COUNTER_BUFFER, sizeof( GLuint ), &numVoxelFragments, GL_MAP_READ_BIT|GL_MAP_WRITE_BIT );
+  glBindBuffer( GL_ATOMIC_COUNTER_BUFFER, 0 );
 }
+
 int App::setupFBO(){
 	//Framebuffer shit
 	glGenFramebuffers(1,&FBO);
@@ -110,32 +124,66 @@ void App::render()  {
   	//First things first
 		cam.calcMatrices();
 
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glViewport(0, 0, 300, 300);
+    //glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glViewport(0, 0, voxelDim, voxelDim);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		shaderProgram->use();
 
 		view = cam.getViewMatrix();
 		GLfloat time = SDL_GetTicks();
     model = glm::mat4(1);
 		//model = glm::rotate(glm::mat4(1), time*0.002f, glm::vec3(0, -1, 0));//	//calculate on the fly
-		MVP = proj*view*model;
-		glUniformMatrix4fv(shaderProgram->uniform("MVP"), 1, false, glm::value_ptr(MVP));
+    MVP = proj*view*model;
 
+    //Disable some fixed-function opeartions
+    glDisable( GL_CULL_FACE );
+    glDisable( GL_DEPTH_TEST );
+    glColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
 
+		shaderProgram->use();
+    mat4 MVPx = viewRight*view*model;
+    mat4 MVPy = viewTop*view*model;
+    mat4 MVPz = viewFront*view*model;
+    glUniformMatrix4fv(shaderProgram->uniform("MVPx"), 1, false, glm::value_ptr(MVPx));
+    glUniformMatrix4fv(shaderProgram->uniform("MVPy"), 1, false, glm::value_ptr(MVPy));
+    glUniformMatrix4fv(shaderProgram->uniform("MVPz"), 1, false, glm::value_ptr(MVPz));
+    glUniform3f(shaderProgram->uniform("gridDim", 1, glm::value_ptr(gridDim));
+
+    //Bind atomic counter
+    glBindBufferBase( GL_ATOMIC_COUNTER_BUFFER, 0, numVoxelsHandle );
+    //Bind image texture at unit 1
+    glBindImageTexture(1, volumeTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 		glBindVertexArray(suzanne);
-		glDrawArrays(GL_TRIANGLES, 0, verts.size());
-		glBindVertexArray(0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDrawArrays(GL_TRIANGLES, 0, verts.size());
+    glMemoryBarrier( GL_ATOMIC_COUNTER_BARRIER_BIT );
+
+    //Now get number of voxels;
+    //Obtain number of voxel fragments
+    glBindBuffer( GL_ATOMIC_COUNTER_BUFFER, numVoxelsHandle );
+    GLuint* count = (GLuint*)glMapBufferRange( GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), GL_MAP_READ_BIT | GL_MAP_WRITE_BIT );
+    numVoxelFragments = count[0];
+    err = glGetError();
+
+    glUnmapBuffer( GL_ATOMIC_COUNTER_BUFFER );
+    glBindBuffer( GL_ATOMIC_COUNTER_BUFFER, 0 );
+    std::cout<<"Max number of voxels = dim*dim*dim = "<<voxelDim*voxelDim*voxelDim<<"\n";
+    std::cout<<"Numvoxels : "<<numVoxelFragments<<"\n";
+
+		glBindVertexArray(0);
+    glEnable( GL_CULL_FACE );
+    glEnable( GL_DEPTH_TEST );
+    glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
+    glViewport( 0, 0, g_width, g_height );
+
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
 		//2nd pass : render everything on screen -- uncomment only for debug purposes
+		//MVP = proj*view*model;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		passthrough->use();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, renderTexture);
+		glBindTexture(GL_TEXTURE_3D, volumeTexture);
 		glUniform1i(passthrough->uniform("sampler"), 0);
 		glBindVertexArray(canvas);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -151,6 +199,24 @@ void App::render()  {
 void App::setupModel()  {
   setupMesh();
   setupCanvas();
+}
+
+void App::setup3DTexture()  {
+  int voxelDim=56;
+  float* data = new float[voxelDim*voxelDim*voxelDim];
+  memset( data, 0, sizeof(float)*voxelDim*voxelDim*voxelDim );
+  glGenTextures(1, &volumeTexture);
+  glBindTexture(GL_TEXTURE_3D, volumeTexture);
+  glTexStorage3D(GL_TEXTURE_3D, 0, GL_RGB10_A2UI, voxelDim,voxelDim,voxelDim);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 0);
+  glTexParameteri(GL_TEXTURE_3D,  GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_3D,  GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage3D( GL_TEXTURE_3D, 0, GL_RGBA16F, voxelvoxelDim, voxelDim, voxelDim, 0, GL_RED, GL_UNSIGNED_BYTE, data );
+  glBindTexture( GL_TEXTURE_3D, 0 );
+  GLenum err = glGetError();
+  cout<<glewGetErrorString(err)<<" "<<err<<endl;
+  delete [] data;
 }
 
 void App::setupCanvas() {
@@ -219,6 +285,7 @@ void App::setupMesh() {
     glBindVertexArray(0);
 
 }
+
 
 void App::handleEvents() {
 

@@ -11,6 +11,7 @@
 #include<cstring>
 #include<string>
 #include<sstream>
+#include<array>
 #include<vector>
 #include<fstream>
 #include<memory>
