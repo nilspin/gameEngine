@@ -1,6 +1,6 @@
 #version 440
 
-uniform sampler2D sampler;
+layout(binding = 1, r32ui) uniform uimage3D volTexture;
 in vec2 pos;
 out vec4 outColor;
 
@@ -8,7 +8,38 @@ out vec4 outColor;
 
 void main()
 {
-	outColor = texture(sampler,pos);
+  ivec3 dim = imageSize(volTexture);
+  // Sample point location and integer conversion results in range from 0 to length - 1.
+  ivec2 xy = ivec2(vec2(dim.xy) * pos);
+
+  //RGBA is in red unsigned integer channel
+  uint packedValue;
+
+  //Final color;
+  vec4 color;
+
+  //Iterate from front to back
+  for(int z=0; z < dim.z; z++)  {
+
+    //Retrieve color information
+    packedValue = imageLoad(volTexture, ivec3(xy,z)).r;
+
+    //convert it back
+    color = unpackUnorm4x8(packedValue);
+
+    //If counter is > 0, a color is found
+    if(color.a > 0) {
+        outColor = color;
+        return;
+    }
+  }
+
+  //nothing found.
+  discard;
+
+
+
+	//outColor = texture(sampler,pos);
 //	float temp = normalize(texture(sampler,pos).x);
 //	outColor = vec4(temp,temp,temp,1);
 }

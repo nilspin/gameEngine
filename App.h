@@ -24,7 +24,7 @@ class App {
     GLuint suzanne;
     GLuint canvas;
     GLuint volumeTexture;
-    const uint voxelDim = 56;
+    const uint voxelDim = 512;
     const glm::ivec3 gridDim = glm::ivec3(voxelDim,voxelDim,voxelDim);
     GLuint VAO;
     GLuint VBO;

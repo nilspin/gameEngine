@@ -42,7 +42,6 @@ void App::setupShaders()  {
   passthrough = unique_ptr<ShaderProgram>(new ShaderProgram());
 	passthrough->initFromFiles("shaders/passthrough.vert", "shaders/passthrough.frag");
 	passthrough->addAttribute("position");
-	passthrough->addUniform("sampler");
 
 }
 
@@ -57,7 +56,7 @@ int App::setupGL()  {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 
-	window = SDL_CreateWindow("SDL_project", 200, 30, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL );
+	window = SDL_CreateWindow("SDL_project", 200, 30, 512, 512, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL );
 	context = SDL_GL_CreateContext(window);
 
 	GLenum err = glewInit();
@@ -177,24 +176,27 @@ void App::render()  {
     glEnable( GL_CULL_FACE );
     glEnable( GL_DEPTH_TEST );
     glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
-    glViewport( 0, 0, 1024, 768 );
+    glViewport( 0, 0, voxelDim, voxelDim );//1024, 768
 
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
 		//2nd pass : render everything on screen -- uncomment only for debug purposes
 		//MVP = proj*view*model;
+		glActiveTexture(GL_TEXTURE1);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		passthrough->use();
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindImageTexture(GL_TEXTURE_3D, volumeTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32UI);
-    //glBindTexture(GL_TEXTURE_3D, volumeTexture);
-		//glUniform1i(passthrough->uniform("sampler"), 0);
+    //bind
+		glBindImageTexture(1, volumeTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32UI);
+
 		glBindVertexArray(canvas);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 
+    //unbind
+    glBindImageTexture(1, 0, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32UI);
 
 		SDL_GL_SwapWindow(window);
 		//		if (1000 / FPS > SDL_GetTicks() - start)

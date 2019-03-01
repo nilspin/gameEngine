@@ -13,6 +13,8 @@ layout( binding =1, r32ui) uniform coherent volatile uimage3D volTexture;
 
 layout(pixel_center_integer) in vec4 gl_FragCoord;
 
+out vec4 outColor;
+
 void imageAtomicAverage(ivec3 pos, vec4 addingColor, ivec3 gridDim)
 {
   //New value to store in the image
@@ -84,4 +86,5 @@ void main()
   imageStore(volTexture, texcoord.xyz, uvec4(f_color, 0));
   //imageAtomicAverage(texcoord.xyz, vec4(f_color, 0), gridDim);
 
+  outColor = vec4(f_color, 1);
 }
