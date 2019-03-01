@@ -1,6 +1,6 @@
 //Shader to voxelize a mesh
 
-#version 430
+#version 440
 
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
@@ -14,9 +14,9 @@ out vec3 f_color;
 uniform mat4 MVPx;
 uniform mat4 MVPy;
 uniform mat4 MVPz;
-uniform ivec3 gridDim;
+uniform vec2 pix;
 
-flat out vec4 AABB;
+flat out vec4 f_AABB;
 flat out int domAxis;//dominant axis
 
 void main()
@@ -46,15 +46,15 @@ void main()
   }
 
   //pixel size
-  vec2 pix = (1/gridDim.x, 1/gridDim.y);
-  float pl = 1.4142135637309/gridDim.x;
+  float pl = 1.4142135637309/pix.x;
 
   //transform to clip space
-  vec3 p0 = proj*vec4(v_position[0],1.0);
-  vec3 p1 = proj*vec4(v_position[1],1.0);
-  vec3 p2 = proj*vec4(v_position[2],1.0);
+  vec4 p0 = proj*vec4(v_position[0],1.0);
+  vec4 p1 = proj*vec4(v_position[1],1.0);
+  vec4 p2 = proj*vec4(v_position[2],1.0);
 
   //calculate bounding box
+  vec4 AABB;
   AABB.xy = p0.xy;
   AABB.zw = p0.xy;
 
@@ -65,6 +65,8 @@ void main()
 
   AABB.xy -= pix;
   AABB.zw += pix;
+
+  f_AABB = AABB;
 
   //Triangle dilation
   vec3 e0 = vec3(p1.xy - p0.xy, 0);
@@ -80,19 +82,19 @@ void main()
 	p2.xy = p2.xy + pl*( (e1.xy/dot(e1.xy,n2.xy)) + (e2.xy/dot(e2.xy,n1.xy)) );
 
   //Done. Spit out enlarged triangle.
-  f_position[0] = p0;
-  f_color[0] = v_color[0];
-  gl_Position[0] = p0;
+  f_position = p0.xyz;
+  f_color = v_color[0];
+  gl_Position = p0;
   EmitVertex();
 
-  f_position[1] = p1;
-  f_color[1] = v_color[1];
-  gl_Position[1] = p1;
+  f_position = p1.xyz;
+  f_color = v_color[1];
+  gl_Position = p1;
   EmitVertex();
 
-  f_position[2] = p2;
-  f_color[2] = v_color[2];
-  gl_Position[2] = p2;
+  f_position = p2.xyz;
+  f_color = v_color[2];
+  gl_Position = p2;
   EmitVertex();
 
 }
