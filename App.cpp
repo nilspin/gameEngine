@@ -21,7 +21,8 @@ int App::init()  {
   setupGL();
   setupShaders();
   setupModel();
-  setupFBO();
+  //setupFBO();
+  setup3DTexture();
   setupAppParams();
 }
 
@@ -36,7 +37,7 @@ void App::setupShaders()  {
 	shaderProgram->addUniform("MVPz");
 	shaderProgram->addUniform("pix");
 	//shaderProgram->addUniform("voxelFragCount");
-	shaderProgram->addUniform("volTexture");
+	//shaderProgram->addUniform("volTexture");
 	shaderProgram->use();
 
   passthrough = unique_ptr<ShaderProgram>(new ShaderProgram());
@@ -66,13 +67,13 @@ int App::setupGL()  {
 		return 1;
 	}
 
-#ifdef DEBUG
+//#ifdef DEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(MessageCallback, nullptr);
   glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
   glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
                      GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Start debugging");
-#endif
+//#endif
 
 
 	glEnable(GL_DEPTH_TEST); //wierd behaviour happens if we don't do this
@@ -128,7 +129,7 @@ void App::render()  {
 		glViewport(0, 0, voxelDim, voxelDim);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glClearTexImage(volumeTexture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &clearValue);
+    //glClearTexImage(volumeTexture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &clearValue);
 
 		view = cam.getViewMatrix();
 		GLfloat time = SDL_GetTicks();
@@ -183,7 +184,7 @@ void App::render()  {
 
 		//2nd pass : render everything on screen -- uncomment only for debug purposes
 		//MVP = proj*view*model;
-		glActiveTexture(GL_TEXTURE1);
+		//glActiveTexture(GL_TEXTURE1);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		passthrough->use();
@@ -192,7 +193,7 @@ void App::render()  {
 		glBindImageTexture(1, volumeTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32UI);
 
 		glBindVertexArray(canvas);
-		//glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 
     //unbind
@@ -210,7 +211,6 @@ void App::setupModel()  {
 }
 
 void App::setup3DTexture()  {
-  int voxelDim=56;
   float* data = new float[voxelDim*voxelDim*voxelDim];
   memset( data, 0, sizeof(float)*voxelDim*voxelDim*voxelDim );
   glGenTextures(1, &volumeTexture);
@@ -220,7 +220,7 @@ void App::setup3DTexture()  {
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 0);
   glTexParameteri(GL_TEXTURE_3D,  GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_3D,  GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  //glTexImage3D( GL_TEXTURE_3D, 0, GL_RGBA16F, voxelDim, voxelDim, voxelDim, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, /*data*/ 0 );
+  //glTexImage3D( GL_TEXTURE_3D, 0, GL_R32UI, voxelDim, voxelDim, voxelDim, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data );
   glBindTexture( GL_TEXTURE_3D, 0 );
   GLenum err = glGetError();
   cout<<glewGetErrorString(err)<<" "<<err<<endl;

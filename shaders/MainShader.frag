@@ -9,7 +9,7 @@ flat in int domAxis;  //axis which projection uses
 
 //atomic counter
 //layout( binding=0, offset=0 ) uniform atomic_uint voxelFragCount;
-layout( binding =1, r32ui) uniform coherent volatile uimage3D volTexture;
+layout( r32ui, binding=1 ) uniform coherent volatile uimage3D volTexture;
 
 layout(pixel_center_integer) in vec4 gl_FragCoord;
 
