@@ -17,7 +17,7 @@ void App::run()  {
     render();
   }
 }
-int App::init()  {
+void App::init()  {
   setupGL();
   setupShaders();
   setupModel();
@@ -35,7 +35,7 @@ void App::setupShaders()  {
 	shaderProgram->addUniform("MVPx");
 	shaderProgram->addUniform("MVPy");
 	shaderProgram->addUniform("MVPz");
-	shaderProgram->addUniform("pix");
+	//shaderProgram->addUniform("pix");
 	//shaderProgram->addUniform("voxelFragCount");
 	//shaderProgram->addUniform("volTexture");
 	shaderProgram->use();
@@ -46,9 +46,9 @@ void App::setupShaders()  {
 
 }
 
-int App::setupGL()  {
+void App::setupGL()  {
 
-	Uint32 start = NULL;
+	Uint32 start = 0;
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -64,7 +64,7 @@ int App::setupGL()  {
 	if (GLEW_OK != err)
 	{
 		cout << "Sorry, but GLEW failed to load.";
-		return 1;
+		return ;
 	}
 
 //#ifdef DEBUG
@@ -86,6 +86,12 @@ void App::setupAppParams()  {
 	cam.setPosition(glm::vec3(0, 0, 5));
 	//proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 100.0f);	//projection matrix
   proj = glm::ortho( -voxelDim*0.5f, voxelDim*0.5f, -voxelDim*0.5f, voxelDim*0.5f, 0.0f, (float)voxelDim );
+  //proj = mat4(1);
+
+  viewFront = glm::lookAt( vec3( 0, 0, voxelDim ), vec3( 0, 0, 0 ), vec3( 0, 1, 0 ) );
+  viewRight = glm::lookAt( vec3( voxelDim, 0, 0 ), vec3( 0, 0, 0 ), vec3( 0, 1, 0 ) );
+  viewTop = glm::lookAt( vec3( 0, voxelDim, 0 ), vec3( 0, 0, 0 ), vec3( 0, 0, -1 ) );
+  glm::mat4 orthoViewMatArray[3] = {viewFront, viewRight, viewTop};
 
   //Set up Atomic counter
   //glGenBuffers( 1, &numVoxelsHandle );
@@ -94,7 +100,7 @@ void App::setupAppParams()  {
   //glBindBuffer( GL_ATOMIC_COUNTER_BUFFER, 0 );
 }
 
-int App::setupFBO(){
+bool App::setupFBO(){
 	//Framebuffer setup
 	glGenFramebuffers(1,&FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
@@ -117,6 +123,8 @@ int App::setupFBO(){
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
 	glBindFramebuffer(GL_FRAMEBUFFER,0);
+
+  return true;
 
 }
 
@@ -149,8 +157,8 @@ void App::render()  {
     glUniformMatrix4fv(shaderProgram->uniform("MVPx"), 1, false, glm::value_ptr(MVPx));
     glUniformMatrix4fv(shaderProgram->uniform("MVPy"), 1, false, glm::value_ptr(MVPy));
     glUniformMatrix4fv(shaderProgram->uniform("MVPz"), 1, false, glm::value_ptr(MVPz));
-    glm::vec2 pix = glm::vec2(1/voxelDim, 1/voxelDim);
-    glUniform2f(shaderProgram->uniform("pix"), pix.x, pix.y);
+    //glm::vec2 pix = glm::vec2(1/voxelDim, 1/voxelDim);
+    //glUniform2f(shaderProgram->uniform("pix"), pix.x, pix.y);
 
     //Bind atomic counter
     //glBindBufferBase( GL_ATOMIC_COUNTER_BUFFER, 0, numVoxelsHandle );

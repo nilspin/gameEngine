@@ -7,6 +7,10 @@
 #include "camera.h"
 
 using namespace std;
+using glm::vec3;
+using glm::vec2;
+using glm::mat4;
+using glm::mat3;
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
@@ -29,7 +33,7 @@ class App {
     GLuint VAO;
     GLuint VBO;
     GLuint FBO;
-    glm::mat4 model, view, proj, MVPx, MVPy, MVPz;
+    glm::mat4 model, view, proj, MVPx, MVPy, MVPz, viewFront, viewRight, viewTop;
     //atomic counter
     GLuint numVoxelsHandle;
     GLuint numVoxelFragments = 0;
@@ -45,20 +49,17 @@ class App {
     Camera cam;
     bool quit = false;
     //ortho matrices
-    glm::mat4 viewFront = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0,0,0), glm::vec3(0,1,0));
-		glm::mat4 viewRight = glm::lookAt(glm::vec3(-5,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0));
-		glm::mat4 viewTop = glm::lookAt(glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(0,0,-1));
     glm::mat4 orthoViewMatArray[3] = {viewFront, viewRight, viewTop};
 
     //METHODS
-    int init();
-    int setupGL();
+    void init();
+    void setupGL();
     void setupShaders();
     void setupModel();
     void setupMesh();
     void setup3DTexture();
     void setupCanvas();
-    int setupFBO();
+    bool setupFBO();
     void setupAppParams();
 
     //For run

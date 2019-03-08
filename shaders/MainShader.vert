@@ -13,5 +13,5 @@ void main()
     v_position = position;
 //	v_normal = normal;
 	v_color = color;
-    gl_Position = vec4( position, 1 );
+    gl_Position = vec4( position, 1.0 );
 }

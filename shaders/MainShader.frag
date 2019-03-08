@@ -4,7 +4,7 @@
 
 in vec3 f_position;
 in vec3 f_color;
-flat in vec4 f_AABB;
+//flat in vec4 f_AABB;
 flat in int domAxis;  //axis which projection uses
 
 //atomic counter
@@ -60,7 +60,7 @@ void main()
   ivec3 gridDim = imageSize(volTexture);
 
   ivec4 temp = ivec4(gl_FragCoord.x, gl_FragCoord.y, gl_FragCoord.z*gridDim.z, 0);
-  if(f_position.x < f_AABB.x || f_position.y < f_AABB.y || f_position.z > f_AABB.z || f_position.y > f_AABB.w)
+  //if(f_position.x < f_AABB.x || f_position.y < f_AABB.y || f_position.z > f_AABB.z || f_position.y > f_AABB.w)
   {
     discard;
   }
@@ -82,9 +82,11 @@ void main()
 	else
 	    texcoord = temp;
 
+  //Flip it
+  texcoord.z = gridDim.x - texcoord.z - 1;
 	//uint idx = atomicCounterIncrement( voxelFragCount );
-  imageStore(volTexture, texcoord.xyz, uvec4(f_color, 0));
-  //imageAtomicAverage(texcoord.xyz, vec4(f_color, 0), gridDim);
+  //imageStore(volTexture, texcoord.xyz, uvec4(f_color, 1));
+  imageAtomicAverage(texcoord.xyz, vec4(f_color, 1), gridDim);
 
   outColor = vec4(f_color, 1);
 }
